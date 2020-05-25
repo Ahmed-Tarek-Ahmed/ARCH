@@ -1,0 +1,99 @@
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.all;
+
+Entity processor IS 
+port(
+	input :IN std_logic_vector (31 downto 0);
+	output :OUT std_logic_vector (31 downto 0);
+	reset,intr :IN std_logic
+);
+END ENTITY;
+
+Architecture p1 OF processor IS
+component ALU is
+GENERIC (n : integer := 32);  
+port(A,B :IN std_logic_vector (n-1 downto 0);
+	Sel :IN std_logic_vector (3 downto 0);
+	Imm :IN std_logic_vector(5 downto 0);
+	Coutin,Negin,Zeroin : IN std_logic;
+	Cout:OUT std_Logic;
+	Neg: OUT std_logic;
+	Zero:OUT std_logic;
+	F: OUT std_logic_vector(n-1 downto 0));
+end component;
+component HazardDetection is
+port(
+  RdstMem,Rsrc1,Rsrc2 : IN std_logic_vector (2 downto 0);
+  WB_MemRead :IN std_logic;
+  currentFunction : IN std_logic_vector (1 downto 0);
+  DecodeFlush,PC_Stall,IfIdSignal : OUT std_logic
+);
+END component;
+component down_counter is
+  port (
+    clock: in std_logic;
+    reset: in std_logic;
+    enable: in std_logic;
+    load_data: in std_logic_vector(1 downto 0);
+    output: out std_logic_vector(1 downto 0)
+  );
+end component;
+component instmem IS
+	PORT(
+		address : IN  std_logic_vector(10 DOWNTO 0);
+		dataout : OUT std_logic_vector(31 DOWNTO 0));
+END component;
+component Control IS
+	PORT(
+		opcode : IN  std_logic_vector(5 DOWNTO 0);
+		INT : IN std_logic;
+		AlUF :OUT std_logic_vector(3 DOWNTO 0);
+		currfun,BatE,WB,Ccontrol,ImmSel,flgsel :OUT std_logic_vector(1 DOWNTO 0);
+		BatM,Outen,MR,MW,MWsel,WBsel,IMDTRSRC,stacken,stackcont,Flgen: OUT std_logic);
+END component ;
+component MultCyc IS
+	PORT(
+		C,CControl,WSel: IN  std_logic_vector(1 DOWNTO 0);
+		BatM,RM,WM,Stack : IN  std_logic;
+		NBatM,NRM,NWM,NStack,cenable: OUT std_logic;
+		NWSel: OUT std_logic_vector(1 DOWNTO 0));
+END component;
+ component ALU is
+GENERIC (n : integer := 32);  
+port(A,B :IN std_logic_vector (n-1 downto 0);
+	Sel :IN std_logic_vector (3 downto 0);
+	Imm :IN std_logic_vector(5 downto 0);
+	Coutin,Negin,Zeroin : IN std_logic;
+	Cout:OUT std_Logic;
+	Neg: OUT std_logic;
+	Zero:OUT std_logic;
+	F: OUT std_logic_vector(n-1 downto 0));
+end component;
+component Forward IS
+Port(
+  Rsrc1,Rsrc2,RdstMem,RdstWB : IN std_logic_vector (2 downto 0);
+  WB_SMem,WB_SWB : IN std_logic_vector (1 downto 0);
+  outMem,outWB: IN std_logic;
+  Rsrc1MUX,Rsrc2MUX : OUT std_logic_vector (2 downto 0)
+);
+END component;
+component RegisterFile IS
+PORT(
+    ReadReg1,ReadReg2,WriteReg1,WriteReg2 : IN std_logic_vector (2 downto 0);
+    ReadData1,ReadData2 : OUT std_logic_vector (31 downto 0);
+    WriteData1,WriteData2 : IN std_logic_vector (31 downto 0);
+    WriteBack1,WriteBack2,CLK,RST: IN std_logic
+
+);
+END component;
+component G_Register IS
+ Generic (n:integer:=31);
+port(
+  D:IN std_logic_vector(2 downto 0);
+  Q:OUT std_logic_vector(2 downto 0);
+  clk,rst,enable:IN std_Logic
+);
+END component;
+begin
+
+END Architecture;
