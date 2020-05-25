@@ -115,7 +115,7 @@ signal PC : std_logic_vector  (10 downto 0);
 signal Rsrc1,Rsrc2,Rdst : std_logic_vector(2 downto 0);
 signal inputPort : std_logic_vector(31 downto 0);
 signal imdtValue: std_logic_vector (15 downto 0);
-signal EAadress : std_logic_vector (19 downto 0);
+signal EAadress : std_logic_vector (10 downto 0);
 -----------------------------------------------
 ---------------------RegFile Signals-----------
 signal WriteReg1,WriteReg2 : std_logic_vector(2 downto 0);
@@ -174,7 +174,7 @@ WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
 -----------------------------------------------
 -------------------Extend MUX------------------
 imdtExtend<="0000000000000000"&imdtValue;
-EAExtend <= "000000000000"&EAadress;
+EAExtend <= "000000000000000000000"&EAadress;
 imdtValueSelected<= imdtExtend when DImmSel="00"
 ELSE  inputPort when DImmSel="01"
 ELSE  EAExtend  when DImmSel="10";
