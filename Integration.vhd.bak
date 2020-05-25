@@ -58,17 +58,6 @@ component MultCyc IS
 		NBatM,NRM,NWM,NStack,cenable: OUT std_logic;
 		NWSel: OUT std_logic_vector(1 DOWNTO 0));
 END component;
- component ALU is
-GENERIC (n : integer := 32);  
-port(A,B :IN std_logic_vector (n-1 downto 0);
-	Sel :IN std_logic_vector (3 downto 0);
-	Imm :IN std_logic_vector(5 downto 0);
-	Coutin,Negin,Zeroin : IN std_logic;
-	Cout:OUT std_Logic;
-	Neg: OUT std_logic;
-	Zero:OUT std_logic;
-	F: OUT std_logic_vector(n-1 downto 0));
-end component;
 component Forward IS
 Port(
   Rsrc1,Rsrc2,RdstMem,RdstWB : IN std_logic_vector (2 downto 0);
@@ -94,6 +83,10 @@ port(
   clk,rst,enable:IN std_Logic
 );
 END component;
+signal PcE,PcM,pcm01,pcadd: std_logic_vector(10 downto 0);
+signal BatE,BatM:std_logic;
 begin
+
+
 
 END Architecture;

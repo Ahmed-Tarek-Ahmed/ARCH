@@ -83,6 +83,10 @@ port(
   clk,rst,enable:IN std_Logic
 );
 END component;
+signal PcE,PcM,pcm01,pcadd,npc: std_logic_vector(10 downto 0);
+signal BatE,BatM:std_logic;
 begin
+pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
+inst1:instmem port map(
 
 END Architecture;
