@@ -103,6 +103,7 @@ signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
 signal BatE,BatM,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
 signal opcodeF:std_logic_vector(5 downto 0);
+signal ONE:std_logic:='1';
 signal branchE :std_logic_vector(1 downto 0);
 signal inst  :std_logic_vector(31 downto 0);
 signal pcInc:std_logic_vector(10 downto 0);
@@ -110,7 +111,7 @@ signal Finbuffer,Foutbuffer:std_logic_vector(75 downto 0);
 ---------------------Decode--------------------
 signal opCode : std_logic_vector (5 downto 0);
 signal intrpt : std_logic ;
-signal pc : std_logic_vector  (10 downto 0);
+signal PC : std_logic_vector  (10 downto 0);
 signal Rsrc1,Rsrc2,Rdst : std_logic_vector(2 downto 0);
 signal inputPort : std_logic_vector(31 downto 0);
 signal imdtValue: std_logic_vector (15 downto 0);
@@ -131,8 +132,21 @@ signal EAExtend:  std_logic_vector(31 downto 0);
 signal imdtValueSelected : std_logic_vector(31 downto 0);
 signal imdtSelector : std_logic_vector(1 downto 0);
 -----------------------------------------------
+------------------Control Unit Signals---------
+signal DAlUF : std_logic_vector(3 DOWNTO 0);
+signal Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel : std_logic_vector(1 DOWNTO 0);
+signal DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen: std_logic;
+signal BeforeCUMUX : std_logic_vector (18 downto 0);
+signal AfterCUMUX : std_logic_vector (18 downto 0);
+signal OrOUT : std_logic;
+-----------------------------------------------
+------------------ID/EXE Buffer signal---------
+signal INbuffer_D: std_logic_vector(134 downto 0);
+signal OUTbuffer_D : std_logic_vector(134 downto 0);
+-----------------------------------------------
 begin
 ------------------fetch------------------------------------
+ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,PC,clk,reset,pcen);
 instmem1:instmem port map(Fpc,inst);
@@ -147,12 +161,20 @@ fdbuffer:G_register generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,zero
 ---------------------------------------------------------------
 -------------------Decode Write Register MUX---
 WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
--------------------------------------------
--------------------Extend MUX--------------
+-----------------------------------------------
+-------------------Extend MUX------------------
 imdtExtend<="0000000000000000"&imdtValue;
 EAExtend <= "000000000000"&EAadress;
-imdtValueSelected<= imdtExtend when imdtSelector="00"
-ELSE  inputPort when imdtSelector="01"
-ELSE  EAExtend  when imdtSelector="10";
+imdtValueSelected<= imdtExtend when DImmSel="00"
+ELSE  inputPort when DImmSel="01"
+ELSE  EAExtend  when DImmSel="10";
+-----------------------------------------------
+------------------Control Unit MUX-------------
+BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DFlgen&Dflgsel;--212121111412
+AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000";
+-----------------------------------------------
+------------------ID/EXE Buffer----------------
+INbuffer_D<=AfterCUMUX&PC&ReadData1&ReadData2&imdtValueSelected&Rdst&Rsrc2&Rsrc1;
+ID_EXE: G_register generic map (135) port map (INbuffer_D,OUTbuffer_D,clk,reset,ONE);
 -----------------------------------------------
 END Architecture;
