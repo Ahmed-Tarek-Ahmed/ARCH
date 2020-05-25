@@ -100,7 +100,7 @@ port(A1,B1 :IN std_logic_vector (n-1 downto 0);
 end component;
 --------------------Fetch-----------------------
 signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
-signal BatE,BatM,pcen,flag:std_logic;
+signal BatE,BatM,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
 signal branchE :std_logic_vector(1 downto 0);
 signal inst  :std_logic_vector(31 downto 0);
@@ -129,7 +129,16 @@ signal EAExtend:  std_logic_vector(31 downto 0);
 signal imdtValueSelected : std_logic_vector(31 downto 0);
 signal imdtSelector : std_logic_vector(1 downto 0);
 -----------------------------------------------
+------------------Control Unit Signals---------
+signal DAlUF : std_logic_vector(3 DOWNTO 0);
+signal Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel : std_logic_vector(1 DOWNTO 0);
+signal DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen: std_logic;
+signal BeforeCUMUX : std_logic_vector (18 downto 0);
+signal AfterCUMUX : std_logic_vector (18 downto 0);
+signal OrOUT : std_logic;
+-----------------------------------------------
 begin
+ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,PC,clk,reset,pcen);
 instmem1:instmem port map(Fpc,inst);
@@ -138,15 +147,18 @@ BatE<=((not flag)and branchE(1)) or branchE(0);
 pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
 pcinc<= "00000000001" when inst(26)='1' else
 	"00000000010";
-
 -------------------Decode Write Register MUX---
 WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
------------------------------------------------
+-------------------------------------------
 -------------------Extend MUX--------------
 imdtExtend<="0000000000000000"&imdtValue;
 EAExtend <= "000000000000"&EAadress;
-imdtValueSelected<= imdtExtend when imdtSelector="00"
-ELSE  inputPort when imdtSelector="01"
-ELSE  EAExtend  when imdtSelector="10";
+imdtValueSelected<= imdtExtend when DImmSel="00"
+ELSE  inputPort when DImmSel="01"
+ELSE  EAExtend  when DImmSel="10";
+-----------------------------------------------
+------------------Control Unit MUX-------------
+BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DFlgen&Dflgsel;--212121111412
+AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000";
 -----------------------------------------------
 END Architecture;
