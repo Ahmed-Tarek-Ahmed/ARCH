@@ -154,6 +154,7 @@ signal RSRC1_data:  std_logic_vector(31 downto 0);
 signal PC_OUT:  std_logic_vector(31 downto 0);
 signal FLAGS:  std_logic_vector(2 downto 0);
 
+signal TEMP_MUX_BEFOREMEM : std_logic_vector(1 downto 0);
 
 signal multi_cycle_output: std_logic_vector(1 downto 0);
 signal counter_control: std_logic_vector(1 downto 0);
@@ -163,7 +164,11 @@ signal ADD_neg2: std_logic_vector(10 downto 0);
 signal cin_SP: std_logic;
 signal cout_SP: std_logic;
 signal NADDER_output: std_logic_vector(10 downto 0);
+signal SP_OUTPUT: std_logic_vector(10 downto 0);
 signal MUX_2x1_beforeadd_out: std_logic_vector(10 downto 0);----------SP
+signal MUX_4X1_to_Counter_ADD0:std_logic_vector(1 downto 0);
+signal MUX_4X1_to_Counter_ADD2:std_logic_vector(1 downto 0);
+signal MUX_4X1_to_Counter_ADD3:std_logic_vector(1 downto 0);
 
 signal WRITE_DATA: std_logic_vector(31 downto 0);
 
@@ -189,11 +194,12 @@ ELSE  inputPort when imdtSelector="01"
 ELSE  EAExtend  when imdtSelector="10";
 -------------MEMORY_MAPPING_(MUXES BEFORE RAM)-----------------
 	--(without multi_cycle)--
+--extend flags--
 FLAGS_EXTENDED <="00000000000000000000000000000"&FLAGS;
 ALU_result_cut <= ALU_result(10 downto 0);
---extend flags--
+
 MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>multi_cycle_output(1),S0=>multi_cycle_output(0),Z=>WRITE_DATA);
---MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut--,B=>--other 2x1 mux from sp);
+--MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_beforeadd_out);
 --MUX_4X1_to_Address: mux_4x1 generic map(11) port map(A=>RSRC1_data,B=>PC_OUT,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>multi_cycle_output(1),S0=>multi_cycle_output(0),Z=>WRITE_DATA);
 
 --------------MEMORY_MAPPING_(SP circuit)-----------------------
@@ -201,9 +207,17 @@ ADD_2<="00000000010";
 ADD_neg2<="11111111110";
 cin_SP<='0';
 
-MUX_2x1_beforeadd: mux_2x1 generic map(11) port map(A=>ADD_2,B=>ADD_neg2,S0=>--from buffer register,Z=>);
-SP_ADDER: NADDER generic map(11) port map(A1=>ADD_2,B1=>ADD_neg2,cin1=>cin_SP,cout1=>cout_SP,sum=>NADDER_output);--add2 and add2 neg to be replaced
 
+--STACK_POINTER: G_Register generic map(11) port map(D=>NADDER_output,Q=>SP_OUTPUT,clk=>clk,rst=>reset,enable=>());
+--MUX_2x1_beforeadd: mux_2x1 generic map(11) port map(A=>ADD_2,B=>ADD_neg2,S0=>from buffer register,Z=>MUX_2x1_beforeadd_out);
+SP_ADDER: NADDER generic map(11) port map(A1=>SP_OUTPUT,B1=>MUX_2x1_beforeadd_out,cin1=>cin_SP,cout1=>cout_SP,sum=>NADDER_output);
+MUX_2x1_afteradd: mux_2x1 generic map(11) port map(A=>NADDER_output,B=>SP_OUTPUT,S0=>from buffer register,Z=>MUX_2x1_beforeadd_out);
+------------MEMORY_MAPPING_(MULTI_CYCLE _CIRCUIT)------------------
+MUX_4X1_to_Counter_ADD0<="00";
+MUX_4X1_to_Counter_ADD2<="10";
+MUX_4X1_to_Counter_ADD3<="11";
+Counter_multi_cycle: down_counter 
+MUX_4X1_to_Counter: mux_4x1 generic map(2) port map(A=>RSRC1_data,B=>PC_OUT,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>multi_cycle_output(1),S0=>multi_cycle_output(0),Z=>WRITE_DATA);
 
 ---------------------------------------------
 END Architecture;
