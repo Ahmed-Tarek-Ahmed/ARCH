@@ -102,13 +102,14 @@ end component;
 signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
 signal BatE,BatM,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
+signal ONE:std_logic:='1';
 signal branchE :std_logic_vector(1 downto 0);
 signal inst  :std_logic_vector(31 downto 0);
 signal pcInc:std_logic_vector(10 downto 0);
 ---------------------Decode--------------------
 signal opCode : std_logic_vector (5 downto 0);
 signal intrpt : std_logic ;
-signal pc : std_logic_vector  (10 downto 0);
+signal PC : std_logic_vector  (10 downto 0);
 signal Rsrc1,Rsrc2,Rdst : std_logic_vector(2 downto 0);
 signal inputPort : std_logic_vector(31 downto 0);
 signal imdtValue: std_logic_vector (15 downto 0);
@@ -137,6 +138,10 @@ signal BeforeCUMUX : std_logic_vector (18 downto 0);
 signal AfterCUMUX : std_logic_vector (18 downto 0);
 signal OrOUT : std_logic;
 -----------------------------------------------
+------------------ID/EXE Buffer signal---------
+signal INbuffer_D: std_logic_vector(134 downto 0);
+signal OUTbuffer_D : std_logic_vector(134 downto 0);
+-----------------------------------------------
 begin
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
@@ -149,8 +154,8 @@ pcinc<= "00000000001" when inst(26)='1' else
 	"00000000010";
 -------------------Decode Write Register MUX---
 WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
--------------------------------------------
--------------------Extend MUX--------------
+-----------------------------------------------
+-------------------Extend MUX------------------
 imdtExtend<="0000000000000000"&imdtValue;
 EAExtend <= "000000000000"&EAadress;
 imdtValueSelected<= imdtExtend when DImmSel="00"
@@ -160,5 +165,9 @@ ELSE  EAExtend  when DImmSel="10";
 ------------------Control Unit MUX-------------
 BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DFlgen&Dflgsel;--212121111412
 AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000";
+-----------------------------------------------
+------------------ID/EXE Buffer----------------
+INbuffer_D<=AfterCUMUX&PC&ReadData1&ReadData2&imdtValueSelected&Rdst&Rsrc2&Rsrc1;
+ID_EXE: G_register generic map (135) port map (INbuffer_D,OUTbuffer_D,clk,reset,ONE);
 -----------------------------------------------
 END Architecture;
