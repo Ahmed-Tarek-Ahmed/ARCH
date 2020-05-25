@@ -137,6 +137,22 @@ signal BeforeCUMUX : std_logic_vector (18 downto 0);
 signal AfterCUMUX : std_logic_vector (18 downto 0);
 signal OrOUT : std_logic;
 -----------------------------------------------
+-----------------------Execute-----------------
+signal Aluin1,Aluin2,ALURes : std_logic_vector(31 downto 0);
+signal Rsrc1D,Rscr2D,Immval : std_logic_vector(31 downto 0);
+signal BranchatMem,FlagED,AndMem,FlagEnable,Flag2F,ALUCont : std_logic;
+signal FlagsMem : std_logic_vector(2 downto 0);
+signal FlagSelec : std_logic_vector(1 downto 0);
+signal AluCon : std_logic_vector(3 downto 0);
+signal FlagsE,Flagsin,FlagsO : std_logic_vector(2 downto 0);
+signal PCEX : std_logic_vector(10 downto 0);
+signal CounterConDB,CounterConE : std_logic_vector(1 downto 0);
+signal BrnchMemDB,BrnchMemE,OpRegEnDB,OpRegEnE : std_logic;
+signal MEMDB,MEME : std_logic_vector(2 downto 0);
+signal WBDB,WBE : std_logic_vector(2 downto 0);
+signal trashcan : std_logic;
+signal Rsc1DB,Rsc1E,Rsc2DB,Rsc2E,RdstDB,RdstE : std_logic_vector(2 downto 0);
+-----------------------------------------------
 begin
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
@@ -161,4 +177,35 @@ ELSE  EAExtend  when DImmSel="10";
 BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DFlgen&Dflgsel;--212121111412
 AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000";
 -----------------------------------------------
+
+-----------------------Execute-----------------
+FlagEnable <= (FlagED AND BranchatMem) OR AndMem;
+FlagsE <= FlagsO when AndMem='0'
+else FlagsMem when AndMem='1';
+FlagReg : G_Register generic map(3) port map(FlagsE,Flagsin,clk,reset,FlagEnable);
+Flag2F <= Flagsin(0) when FlagSelec = "00"
+else Flagsin(1) when FlagSelec = "01"
+else Flagsin(2) when FlagSelec = "10";
+Aluin1 <= Rsrc1D;
+Aluin2 <= Rscr2D when ALUCont ='0'
+else Immval when ALUCont='1';
+ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),FlagsE(2),FlagsE(1),FlagsE(0),ALURes);
+AdderEX : NADDER generic map(11) port map(PCE,"00000000001",'0',trashcan,PCEX);
+CounterConE <= CounterConDB when BranchatMem='0'
+else "00" when BranchatMem ='1';
+BrnchMemE  <= BrnchMemDB when BranchatMem='0'
+else '0' when BranchatMem ='1';
+OpRegEnE  <= OpRegEnDB when BranchatMem='0'
+else '0' when BranchatMem ='1';
+MEME   <= MEMDB when BranchatMem='0'
+else "000" when BranchatMem ='1';
+WBE  <= WBDB when BranchatMem='0'
+else "000" when BranchatMem ='1'; 
+Rsc1E  <= Rsc1DB;
+Rsc2E <= Rsc2DB;
+RdstE <= RdstDB;
+-----------------------------------------------
+
+
+
 END Architecture;
