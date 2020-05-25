@@ -91,11 +91,20 @@ component pcmux IS
 		Naddress: OUT std_logic_vector(10 DOWNTO 0)
 );
 END component ;
+component NADDER is
+GENERIC (n : integer := 32);  
+port(A1,B1 :IN std_logic_vector (n-1 downto 0);
+  Cin1:IN std_logic;
+	Cout1:OUT std_Logic;
+	sum: OUT std_logic_vector(n-1 downto 0));
+end component;
 --------------------Fetch-----------------------
 signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
-signal BatE,BatM,pcen,flag,BatE1:std_logic;
+signal BatE,BatM,pcen,flag:std_logic;
+signal zero:std_logic:='0';
 signal branchE :std_logic_vector(1 downto 0);
-signal inst:std_logic_vector(31 downto 0);
+signal inst  :std_logic_vector(31 downto 0);
+signal pcInc:std_logic_vector(10 downto 0);
 ---------------------Decode--------------------
 signal opCode : std_logic_vector (5 downto 0);
 signal intrpt : std_logic ;
@@ -118,8 +127,9 @@ pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,PC,clk,reset,pcen);
 instmem1:instmem port map(Fpc,inst);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset);
-BatE1<= (not flag)and branchE(1);
-BatE<=BatE1 or branchE(0);
-
+BatE<=((not flag)and branchE(1)) or branchE(0);
+pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
+pcinc<= "00000000001" when inst(26)='1' else
+	"00000000010";
 
 END Architecture;
