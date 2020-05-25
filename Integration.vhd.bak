@@ -100,18 +100,17 @@ port(A1,B1 :IN std_logic_vector (n-1 downto 0);
 end component;
 --------------------Fetch-----------------------
 signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
-signal BatE,BatM,pcen,flag:std_logic;
+signal BatE,BatM,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
 signal branchE :std_logic_vector(1 downto 0);
-signal inst:std_logic_vector(31 downto 0);
+signal inst  :std_logic_vector(31 downto 0);
 signal pcInc:std_logic_vector(10 downto 0);
 ---------------------Decode--------------------
 signal opCode : std_logic_vector (5 downto 0);
 signal intrpt : std_logic ;
-
 signal pc : std_logic_vector  (10 downto 0);
 signal Rsrc1,Rsrc2,Rdst : std_logic_vector(2 downto 0);
-
+signal inputPort : std_logic_vector(31 downto 0);
 signal imdtValue: std_logic_vector (15 downto 0);
 signal EAadress : std_logic_vector (19 downto 0);
 -----------------------------------------------
@@ -121,9 +120,17 @@ signal WriteData1,WriteData2_MEM : std_logic_vector(31 downto 0);
 signal ReadData1,ReadData2 : std_logic_vector (31 downto 0);
 signal WriteBack1_MEM,WriteBack2_MEM: std_logic;
 -----------------------------------------------
+-------------------Decode Write Register MUX---
+signal RdstMEM,Rsrc2MEM : std_logic_vector(2 downto 0);
+-----------------------------------------------
+-------------------Extend Signals--------------
+signal imdtExtend:  std_logic_vector(31 downto 0);
+signal EAExtend:  std_logic_vector(31 downto 0);
+signal imdtValueSelected : std_logic_vector(31 downto 0);
+signal imdtSelector : std_logic_vector(1 downto 0);
+-----------------------------------------------
 begin
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
-
 pcreg: G_register generic map(11) port map(npc,PC,clk,reset,pcen);
 instmem1:instmem port map(Fpc,inst);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset);
@@ -132,4 +139,14 @@ pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
 pcinc<= "00000000001" when inst(26)='1' else
 	"00000000010";
 
+-------------------Decode Write Register MUX---
+WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
+-------------------------------------------
+-------------------Extend MUX--------------
+imdtExtend<="0000000000000000"&imdtValue;
+EAExtend <= "000000000000"&EAadress;
+imdtValueSelected<= imdtExtend when imdtSelector="00"
+ELSE  inputPort when imdtSelector="01"
+ELSE  EAExtend  when imdtSelector="10";
+-----------------------------------------------
 END Architecture;

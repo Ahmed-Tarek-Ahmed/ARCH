@@ -100,7 +100,7 @@ port(A1,B1 :IN std_logic_vector (n-1 downto 0);
 end component;
 --------------------Fetch-----------------------
 signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
-signal BatE,BatM,pcen,flag:std_logic;
+signal BatE,BatM,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
 signal branchE :std_logic_vector(1 downto 0);
 signal inst  :std_logic_vector(31 downto 0);
@@ -141,7 +141,7 @@ pcinc<= "00000000001" when inst(26)='1' else
 
 -------------------Decode Write Register MUX---
 WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
------------------------------------------------
+-------------------------------------------
 -------------------Extend MUX--------------
 imdtExtend<="0000000000000000"&imdtValue;
 EAExtend <= "000000000000"&EAadress;
