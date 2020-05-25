@@ -14,9 +14,6 @@ s <= a XOR b XOR Cin;
 cout <= (a AND b) OR (cin AND (a XOR b));
 END a_my_adder;
 
-LIBRARY IEEE;
-USE IEEE.std_logic_1164.all;
-
 entity NADDER is
 GENERIC (n : integer := 32);  
 port(A1,B1 :IN std_logic_vector (n-1 downto 0);
