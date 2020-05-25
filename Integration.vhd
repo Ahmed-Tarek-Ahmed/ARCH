@@ -157,8 +157,18 @@ pcinc<= "00000000001" when inst(26)='1' else
 	"00000000010";
 opcodeF <= inst(31 downto 26) when fflush='0'
 	else "000000";
-fdbuffer:G_register generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,zero);
+Finbuffer<= opcodeF & inst(25 downto 0) & intr & fpc & input;
+fdbuffer:G_register generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,ONE);
 ---------------------------------------------------------------
+opcode<= foutbuffer(75 downto 70);
+intrpt<=foutbuffer(43);
+pc<=foutbuffer(42 downto 32);
+Rsrc1<=foutbuffer(69 downto 67);
+Rdst<=foutbuffer(66 downto 64);
+Rsrc2<=foutbuffer(63 downto 61);
+imdtvalue<=foutbuffer(59 downto 44);
+EAadress<=foutbuffer(54 downto  44);
+inputport<=foutbuffer(31 downto 0);
 -------------------Decode Write Register MUX---
 WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
 -----------------------------------------------
@@ -170,7 +180,7 @@ ELSE  inputPort when DImmSel="01"
 ELSE  EAExtend  when DImmSel="10";
 -----------------------------------------------
 ------------------Control Unit MUX-------------
-BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DFlgen&Dflgsel;--212121111412
+BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DFlgen&Dflgsel;
 AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000";
 -----------------------------------------------
 ------------------ID/EXE Buffer----------------
