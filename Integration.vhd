@@ -102,9 +102,11 @@ end component;
 signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
 signal BatE,BatM,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
+signal opcodeF:std_logic_vector(5 downto 0);
 signal branchE :std_logic_vector(1 downto 0);
 signal inst  :std_logic_vector(31 downto 0);
 signal pcInc:std_logic_vector(10 downto 0);
+signal Finbuffer,Foutbuffer:std_logic_vector(75 downto 0);
 ---------------------Decode--------------------
 signal opCode : std_logic_vector (5 downto 0);
 signal intrpt : std_logic ;
@@ -130,6 +132,7 @@ signal imdtValueSelected : std_logic_vector(31 downto 0);
 signal imdtSelector : std_logic_vector(1 downto 0);
 -----------------------------------------------
 begin
+------------------fetch------------------------------------
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,PC,clk,reset,pcen);
 instmem1:instmem port map(Fpc,inst);
@@ -138,7 +141,10 @@ BatE<=((not flag)and branchE(1)) or branchE(0);
 pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
 pcinc<= "00000000001" when inst(26)='1' else
 	"00000000010";
-
+opcodeF <= inst(31 downto 26) when fflush='0'
+	else "000000";
+fdbuffer:G_register generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,zero);
+---------------------------------------------------------------
 -------------------Decode Write Register MUX---
 WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
 -------------------------------------------
