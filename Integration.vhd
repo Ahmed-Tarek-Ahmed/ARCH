@@ -87,18 +87,24 @@ END component;
 signal PcE,PcM,pcm01,pcadd,npc,PC: std_logic_vector(10 downto 0);
 signal BatE,BatM,pcen:std_logic;
 signal inst:std_logic_vector(31 downto 0);
----------------------Decode---------------------
+---------------------Decode--------------------
 signal opCode : std_logic_vector (5 downto 0);
 signal intrpt : std_logic ;
-signal pc std_logic_vector(31 downto 0);
-signal Rsrc1,Rsrc2,Rdst std_logic_vector(2 downto 0);
+signal pc : std_logic_vector  (31 downto 0);
+signal Rsrc1,Rsrc2,Rdst : std_logic_vector(2 downto 0);
 signal imdtValue: std_logic_vector (15 downto 0);
 signal EAadress : std_logic_vector (19 downto 0);
-------------------------------------------------
+-----------------------------------------------
+---------------------RegFile Signals-----------
+signal WriteReg1,WriteReg2 : std_logic_vector(2 downto 0);
+signal WriteData1,WriteData2_MEM : std_logic_vector(31 downto 0);
+ReadData1,ReadData2 : std_logic_vector (31 downto 0);
+WriteBack1_MEM,WriteBack2_MEM: std_logic
+-----------------------------------------------
 begin
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,PC,clk,reset,pcen);
 instmem1:instmem port map(pc,inst);
-RegFile : RegisterFile port map (Rsrc1,Rsrc2,)
+RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset);
 
 END Architecture;
