@@ -84,21 +84,25 @@ port(
   clk,rst,enable:IN std_Logic
 );
 END component;
-signal PcE,PcM,pcm01,pcadd,npc,PC: std_logic_vector(10 downto 0);
-signal BatE,BatM,pcen:std_logic;
+--------------------Fetch-----------------------
+signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
+signal BatE,BatM,pcen,flag,BatE1:std_logic;
+signal branchE :std_logic_vector(1 downto 0);
 signal inst:std_logic_vector(31 downto 0);
 ---------------------Decode---------------------
 signal opCode : std_logic_vector (5 downto 0);
 signal intrpt : std_logic ;
-signal pc std_logic_vector(31 downto 0);
-signal Rsrc1,Rsrc2,Rdst std_logic_vector(2 downto 0);
+signal pc: std_logic_vector(31 downto 0);
+signal Rsrc1,Rsrc2,Rdst: std_logic_vector(2 downto 0);
 signal imdtValue: std_logic_vector (15 downto 0);
 signal EAadress : std_logic_vector (19 downto 0);
 ------------------------------------------------
 begin
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
-pcreg: G_register generic map(11) port map(npc,PC,clk,reset,pcen);
-instmem1:instmem port map(pc,inst);
+pcreg: G_register generic map(11) port map(npc,FPC,clk,reset,pcen);
+instmem1:instmem port map(Fpc,inst);
+BatE1<= (not flag)and branchE(1);
+BatE<=BatE1 or branchE(0);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,)
 
 END Architecture;
