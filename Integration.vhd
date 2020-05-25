@@ -85,8 +85,9 @@ port(
 END component;
 signal PcE,PcM,pcm01,pcadd,npc: std_logic_vector(10 downto 0);
 signal BatE,BatM:std_logic;
+signal inst:std_logic_vector(31 downto 0);
 begin
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
-inst1:instmem port map(
+instmem1:instmem port map(npc,inst);
 
 END Architecture;
