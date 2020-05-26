@@ -120,17 +120,20 @@ end component;
 signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
 signal BatE,BatM,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
+signal opcodeF:std_logic_vector(5 downto 0);
+signal ONE:std_logic:='1';
 signal branchE :std_logic_vector(1 downto 0);
 signal inst  :std_logic_vector(31 downto 0);
 signal pcInc:std_logic_vector(10 downto 0);
+signal Finbuffer,Foutbuffer:std_logic_vector(75 downto 0);
 ---------------------Decode--------------------
 signal opCode : std_logic_vector (5 downto 0);
 signal intrpt : std_logic ;
-signal pc : std_logic_vector  (10 downto 0);
+signal PC : std_logic_vector  (10 downto 0);
 signal Rsrc1,Rsrc2,Rdst : std_logic_vector(2 downto 0);
 signal inputPort : std_logic_vector(31 downto 0);
 signal imdtValue: std_logic_vector (15 downto 0);
-signal EAadress : std_logic_vector (19 downto 0);
+signal EAadress : std_logic_vector (10 downto 0);
 -----------------------------------------------
 ---------------------RegFile Signals-----------
 signal WriteReg1,WriteReg2 : std_logic_vector(2 downto 0);
@@ -146,6 +149,7 @@ signal imdtExtend:  std_logic_vector(31 downto 0);
 signal EAExtend:  std_logic_vector(31 downto 0);
 signal imdtValueSelected : std_logic_vector(31 downto 0);
 signal imdtSelector : std_logic_vector(1 downto 0);
+
 
 signal FLAGS_EXTENDED:  std_logic_vector(31 downto 0);
 signal ALU_result_cut:  std_logic_vector(10 downto 0);
@@ -191,7 +195,38 @@ signal new_read_mem,new_write_mem,new_stack_enable,new_counter_enable: std_logic
 signal new_write_select_toMux2x1: std_logic_vector(1 downto 0);
 ---------------------------------------------------------------------------------
 
+-----------------------------------------------
+------------------Control Unit Signals---------
+signal DAlUF : std_logic_vector(3 DOWNTO 0);
+signal Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel : std_logic_vector(1 DOWNTO 0);
+signal DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen: std_logic;
+signal BeforeCUMUX : std_logic_vector (18 downto 0);
+signal AfterCUMUX : std_logic_vector (18 downto 0);
+signal OrOUT : std_logic;
+-----------------------------------------------
+
+-----------------------Execute-----------------
+signal Aluin1,Aluin2,ALURes : std_logic_vector(31 downto 0);
+signal Rsrc1D,Rscr2D,Immval : std_logic_vector(31 downto 0);
+signal BranchatMem,FlagED,AndMem,FlagEnable,Flag2F,ALUCont : std_logic;
+signal FlagsMem : std_logic_vector(2 downto 0);
+signal FlagSelec : std_logic_vector(1 downto 0);
+signal AluCon : std_logic_vector(3 downto 0);
+signal FlagsE,Flagsin,FlagsO : std_logic_vector(2 downto 0);
+signal PCEX : std_logic_vector(10 downto 0);
+signal CounterConDB,CounterConE : std_logic_vector(1 downto 0);
+signal BrnchMemDB,BrnchMemE,OpRegEnDB,OpRegEnE : std_logic;
+signal MEMDB,MEME : std_logic_vector(2 downto 0);
+signal WBDB,WBE : std_logic_vector(2 downto 0);
+signal trashcan : std_logic;
+signal Rsc1DB,Rsc1E,Rsc2DB,Rsc2E,RdstDB,RdstE : std_logic_vector(2 downto 0);
+------------------ID/EXE Buffer signal---------
+signal INbuffer_D: std_logic_vector(134 downto 0);
+signal OUTbuffer_D : std_logic_vector(134 downto 0);
+-----------------------------------------------
 begin
+------------------fetch------------------------------------
+ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,PC,clk,reset,pcen);
 instmem1:instmem port map(Fpc,inst);
@@ -200,11 +235,24 @@ BatE<=((not flag)and branchE(1)) or branchE(0);
 pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
 pcinc<= "00000000001" when inst(26)='1' else
 	"00000000010";
-
+opcodeF <= inst(31 downto 26) when fflush='0'
+	else "000000";
+Finbuffer<= opcodeF & inst(25 downto 0) & intr & fpc & input;
+fdbuffer:G_register generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,ONE);
+---------------------------------------------------------------
+opcode<= foutbuffer(75 downto 70);
+intrpt<=foutbuffer(43);
+pc<=foutbuffer(42 downto 32);
+Rsrc1<=foutbuffer(69 downto 67);
+Rdst<=foutbuffer(66 downto 64);
+Rsrc2<=foutbuffer(63 downto 61);
+imdtvalue<=foutbuffer(59 downto 44);
+EAadress<=foutbuffer(54 downto  44);
+inputport<=foutbuffer(31 downto 0);
 -------------------Decode Write Register MUX---
 WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
--------------------------------------------
--------------------Extend MUX--------------
+-----------------------------------------------
+-------------------Extend MUX------------------
 imdtExtend<="0000000000000000"&imdtValue;
 EAExtend <= "000000000000"&EAadress;
 imdtValueSelected<= imdtExtend when imdtSelector="00"
@@ -250,4 +298,48 @@ multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_contro
 stall_memory<=counter_output(1) or counter_output(0);
 NEW_BRANCH_atMEM<=counter_output(0) and counter_control(0);
 ---------------------------------------------
+EAExtend <= "000000000000000000000"&EAadress;
+imdtValueSelected<= imdtExtend when DImmSel="00"
+ELSE  inputPort when DImmSel="01"
+ELSE  EAExtend  when DImmSel="10";
+-----------------------------------------------
+------------------Control Unit MUX-------------
+BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DFlgen&Dflgsel;
+AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000";
+-----------------------------------------------
+
+-----------------------Execute-----------------
+FlagEnable <= (FlagED AND BranchatMem) OR AndMem;
+FlagsE <= FlagsO when AndMem='0'
+else FlagsMem when AndMem='1';
+FlagReg : G_Register generic map(3) port map(FlagsE,Flagsin,clk,reset,FlagEnable);
+Flag2F <= Flagsin(0) when FlagSelec = "00"
+else Flagsin(1) when FlagSelec = "01"
+else Flagsin(2) when FlagSelec = "10";
+Aluin1 <= Rsrc1D;
+Aluin2 <= Rscr2D when ALUCont ='0'
+else Immval when ALUCont='1';
+ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),FlagsE(2),FlagsE(1),FlagsE(0),ALURes);
+AdderEX : NADDER generic map(11) port map(PCE,"00000000001",'0',trashcan,PCEX);
+CounterConE <= CounterConDB when BranchatMem='0'
+else "00" when BranchatMem ='1';
+BrnchMemE  <= BrnchMemDB when BranchatMem='0'
+else '0' when BranchatMem ='1';
+OpRegEnE  <= OpRegEnDB when BranchatMem='0'
+else '0' when BranchatMem ='1';
+MEME   <= MEMDB when BranchatMem='0'
+else "000" when BranchatMem ='1';
+WBE  <= WBDB when BranchatMem='0'
+else "000" when BranchatMem ='1'; 
+Rsc1E  <= Rsc1DB;
+Rsc2E <= Rsc2DB;
+RdstE <= RdstDB;
+-----------------------------------------------
+
+
+------------------ID/EXE Buffer----------------
+INbuffer_D<=AfterCUMUX&PC&ReadData1&ReadData2&imdtValueSelected&Rdst&Rsrc2&Rsrc1;
+ID_EXE: G_register generic map (135) port map (INbuffer_D,OUTbuffer_D,clk,reset,ONE);
+-----------------------------------------------
+
 END Architecture;
