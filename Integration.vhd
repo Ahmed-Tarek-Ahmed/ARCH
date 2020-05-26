@@ -237,7 +237,7 @@ signal MEMDB,MEME : std_logic_vector(4 downto 0);
 signal WBDB,WBE : std_logic_vector(2 downto 0);
 signal trashcan : std_logic;
 signal Rsc1DB,Rsc1E,Rsc2DB,Rsc2E,RdstDB,RdstE : std_logic_vector(2 downto 0);
-signal EXBufferin,EXBufferout : std_logic_vector(128 downto 0);
+signal EXBufferin,EXBufferout : std_logic_vector(130 downto 0);
 ------------------ID/EXE Buffer signal---------
 signal INbuffer_D: std_logic_vector(137 downto 0);
 signal OUTbuffer_D : std_logic_vector(137 downto 0);
