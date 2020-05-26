@@ -310,6 +310,7 @@ MUX_4X1_to_Counter_LOAD0<="00";
 MUX_4X1_to_Counter_LOAD2<="10";
 MUX_4X1_to_Counter_LOAD3<="11";
 MUX_4X1_to_Counter_LOADVOID<="00";
+BranchatMem<=NEW_BRANCH_atMEM;
 
 MUX_4X1_to_Counter: mux_4x1 generic map(2) port map(A=>MUX_4X1_to_Counter_LOAD0,B=>MUX_4X1_to_Counter_LOAD2,C=>MUX_4X1_to_Counter_LOAD3,D=>MUX_4X1_to_Counter_LOADVOID,S1=>counter_control(1),S0=>counter_control(0),Z=>MUX_4X1_to_Counter_OUT);
 
@@ -326,12 +327,12 @@ MSB_SELEC_MUX4x1_Address<=new_read_mem and counter_control(1);
 MEMORY: ram port map(clk=>clk,we=>new_write_mem,address=>MEMORY_ADDRESS,datain=>WRITE_DATA,dataout=>READ_DATA);
 
 ---------------------MEM/WB BUFFER_MAPPING----------------------
---signal opregMemB : std_logic;
---signal WBMemB : std_logic_vector(2 downto 0);
+--signal opregMemB 
+--signal WBMemB 
 --read data already 
 --ALU_RESULT already declared
---signal Rsrc1MemB,Rsrc2MemB,RdstMemB: std_logic_vector(2 downto 0);
---signal Rsrc2dataMemB : std_logic_vector(31 downto 0);
+--signal Rsrc1MemB,Rsrc2MemB,RdstMemB
+--signal Rsrc2dataMemB 
 
 BUS_TO_MEM_WB_BUFFER_IN<=opregMemB & WBMemB & READ_DATA & ALU_RESULT & RdstMemB & Rsrc2dataMemB & Rsrc2MemB & Rsrc1MemB;
 ENABLE_BUFFER_MEM_TO_WB<='1';
@@ -377,16 +378,16 @@ PC_OUT <= EXBufferout(89 downto 79);
 FLAGS <= EXBufferout(14 downto 12);
 counter_control <= EXBufferout(1 downto 0);
 branch_atMEM <= EXBufferout(2);
-multi_cycle_write_select <= EXBufferout(7);
-mem_read_control <= EXBufferout(8);
-mem_write_control <= EXBufferout(9);
-stack_enable <= EXBufferout(10);
-inc_dec <= EXBufferout(11);
+multi_cycle_write_select <= EXBufferout(4);
+mem_read_control <= EXBufferout(5);
+mem_write_control <= EXBufferout(6);
+stack_enable <= EXBufferout(7);
+inc_dec <= EXBufferout(8);
 Rsrc1MemB <= EXBufferout(130 downto 128);
 Rsrc2MemB <= EXBufferout(127 downto 125);
 RdstMem <= EXBufferout(92 downto 90);
 Rsrc2dataMemB <= EXBufferout(124 downto 93);
-WBMemB <= EXBufferout(6 downto 4);
+WBMemB <= EXBufferout(11 downto 9);
 opregMemB <= EXBufferout(3);
 -----------------------------------------------
 

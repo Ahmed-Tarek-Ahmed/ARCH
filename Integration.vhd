@@ -310,6 +310,7 @@ MUX_4X1_to_Counter_LOAD0<="00";
 MUX_4X1_to_Counter_LOAD2<="10";
 MUX_4X1_to_Counter_LOAD3<="11";
 MUX_4X1_to_Counter_LOADVOID<="00";
+BranchatMem<=NEW_BRANCH_atMEM;
 
 MUX_4X1_to_Counter: mux_4x1 generic map(2) port map(A=>MUX_4X1_to_Counter_LOAD0,B=>MUX_4X1_to_Counter_LOAD2,C=>MUX_4X1_to_Counter_LOAD3,D=>MUX_4X1_to_Counter_LOADVOID,S1=>counter_control(1),S0=>counter_control(0),Z=>MUX_4X1_to_Counter_OUT);
 
@@ -319,6 +320,8 @@ multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_contro
 
 stall_memory<=counter_output(1) or counter_output(0);
 WIRE_MEM_TO_EXEC<=counter_output(0) and counter_control(0);
+
+AndMem<=WIRE_MEM_TO_EXEC;
 
 MSB_SELEC_MUX4x1_Address<=new_read_mem and counter_control(1);
 --------------------MEMORY_MAPPING_RAM------------------
