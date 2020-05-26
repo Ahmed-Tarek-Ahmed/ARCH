@@ -163,10 +163,14 @@ signal TEMP_MUX_BEFOREMEM : std_logic_vector(1 downto 0);
 
 signal counter_control: std_logic_vector(1 downto 0);
 signal branch_atMEM,mem_read_control,mem_write_control,stack_enable,inc_dec: std_logic;
+
 signal Rsrc1MemB,Rsrc2MemB,RdstMemB: std_logic_vector(2 downto 0);
 signal Rsrc2dataMemB : std_logic_vector(31 downto 0);
 signal WBMemB : std_logic_vector(2 downto 0);
 signal opregMemB : std_logic;
+
+signal WIRE_MEM_TO_EXEC: std_logic;
+
 ------------------Memory signals (NOT TEMP)---------------
 signal ADD_2: std_logic_vector(10 downto 0);
 signal ADD_neg2: std_logic_vector(10 downto 0);
@@ -185,7 +189,6 @@ signal MUX_4X1_to_Counter_LOAD3:std_logic_vector(1 downto 0);
 signal MUX_4X1_to_Counter_LOADVOID:std_logic_vector(1 downto 0);
 signal MUX_4X1_to_Counter_OUT:std_logic_vector(1 downto 0);
 
-signal counter_enable:std_logic;
 signal counter_output: std_logic_vector(1 downto 0);
 
 signal MEMORY_ADDRESS: std_logic_vector(10 downto 0);
@@ -196,6 +199,7 @@ signal NEW_BRANCH_atMEM: std_logic;
 signal multi_cycle_write_select: std_logic_vector(1 downto 0);
 signal new_read_mem,new_write_mem,new_stack_enable,new_counter_enable: std_logic;
 signal new_write_select_toMux2x1: std_logic_vector(1 downto 0);
+signal MSB_SELEC_MUX4x1_Address: std_logic;
 ---------------------------------------------------------------------------------
 
 -----------------------------------------------
@@ -273,7 +277,7 @@ MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT,C
 
 MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_beforeadd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);
 
---MUX_4X1_to_Address: mux_4x1 generic map(11) port map(A=>MUX_2x1_to_mem_out,B=>ADD_0,C=>ADD_2,D=>ADD_0,S1=>multi_cycle_output(1),S0=>multi_cycle_output(0),Z=>MEMORY_ADDRESS); ----SELECTION LINES NEED TO BE REVIEWED
+MUX_4X1_to_Address: mux_4x1 generic map(11) port map(A=>MUX_2x1_to_mem_out,B=>ADD_0,C=>ADD_2,D=>ADD_0,S1=>MSB_SELEC_MUX4x1_Address,S0=>reset,Z=>MEMORY_ADDRESS); ----SELECTION LINES NEED TO BE REVIEWED
 
 --------------MEMORY_MAPPING_(SP circuit)-----------------------
 ADD_2<="00000000010";
@@ -295,13 +299,14 @@ MUX_4X1_to_Counter_LOADVOID<="00";
 
 MUX_4X1_to_Counter: mux_4x1 generic map(2) port map(A=>MUX_4X1_to_Counter_LOAD0,B=>MUX_4X1_to_Counter_LOAD2,C=>MUX_4X1_to_Counter_LOAD3,D=>MUX_4X1_to_Counter_LOADVOID,S1=>counter_control(1),S0=>counter_control(0),Z=>MUX_4X1_to_Counter_OUT);
 
-Counter_multi_cycle: down_counter port map(clock=>clk,reset=>reset,enable=>counter_enable,load_data=>MUX_4X1_to_Counter_OUT,output=>counter_output);
+Counter_multi_cycle: down_counter port map(clock=>clk,reset=>reset,enable=>new_counter_enable,load_data=>MUX_4X1_to_Counter_OUT,output=>counter_output);
 
-multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_control,WSel=>multi_cycle_write_select,BatM=>branch_atMEM,RM=>mem_read_control,WM=>mem_write_control,Stack=>stack_enable,NRM=>new_read_mem,NWM=>new_write_mem,NStack=>new_stack_enable,cenable=>new_counter_enable,NWSel=>new_write_select_toMux2x1);
+multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_control,WSel=>multi_cycle_write_select,BatM=>NEW_BRANCH_atMEM,RM=>mem_read_control,WM=>mem_write_control,Stack=>stack_enable,NRM=>new_read_mem,NWM=>new_write_mem,NStack=>new_stack_enable,cenable=>new_counter_enable,NWSel=>new_write_select_toMux2x1);
 
 stall_memory<=counter_output(1) or counter_output(0);
-NEW_BRANCH_atMEM<=counter_output(0) and counter_control(0);
+WIRE_MEM_TO_EXEC<=counter_output(0) and counter_control(0);
 
+MSB_SELEC_MUX4x1_Address<=new_read_mem and counter_control(1);
 ------------------Control Unit MUX-------------
 BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DIMDTRSRC&DFlgen&Dflgsel;
 AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "00000000000000000000";
