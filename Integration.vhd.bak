@@ -54,8 +54,8 @@ component Control IS
 END component ;
 component MultCyc IS
 	PORT(
-		C,CControl,WSel: IN  std_logic_vector(1 DOWNTO 0);
-		BatM,RM,WM,Stack : IN  std_logic;
+		C,CControl: IN  std_logic_vector(1 DOWNTO 0);
+		BatM,RM,WM,Stack,WSel : IN  std_logic;
 		NBatM,NRM,NWM,NStack,cenable: OUT std_logic;
 		NWSel: OUT std_logic_vector(1 DOWNTO 0));
 END component;
@@ -116,6 +116,15 @@ GENERIC (n : integer := 32);
      Z: OUT std_logic_vector(n-1 downto 0)
   );
 end component;
+-------------------RAM---------------------------
+component ram is
+	PORT(
+		clk : IN std_logic;
+		we  : IN std_logic;
+		address : IN  std_logic_vector(10 DOWNTO 0);
+		datain  : IN  std_logic_vector(31 DOWNTO 0);
+		dataout : OUT std_logic_vector(31 DOWNTO 0));
+END component;
 --------------------Fetch-----------------------
 signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
 signal BatE,BatM,pcen,flag,Fflush:std_logic;
@@ -161,6 +170,7 @@ signal FLAGS:  std_logic_vector(2 downto 0);
 
 signal TEMP_MUX_BEFOREMEM : std_logic_vector(1 downto 0);
 
+signal multi_cycle_write_select: std_logic;
 signal counter_control: std_logic_vector(1 downto 0);
 signal branch_atMEM,mem_read_control,mem_write_control,stack_enable,inc_dec: std_logic;
 signal WIRE_MEM_TO_EXEC: std_logic;
@@ -186,12 +196,12 @@ signal counter_output: std_logic_vector(1 downto 0);
 
 signal MEMORY_ADDRESS: std_logic_vector(10 downto 0);
 signal WRITE_DATA: std_logic_vector(31 downto 0);
+signal READ_DATA: std_logic_vector(31 downto 0);
 
 signal stall_memory: std_logic;
 signal NEW_BRANCH_atMEM: std_logic;
-signal multi_cycle_write_select: std_logic_vector(1 downto 0);
 signal new_read_mem,new_write_mem,new_stack_enable,new_counter_enable: std_logic;
-signal new_write_select_toMux2x1: std_logic_vector(1 downto 0);
+signal new_write_select_toMux4x1: std_logic_vector(1 downto 0);
 signal MSB_SELEC_MUX4x1_Address: std_logic;
 ---------------------------------------------------------------------------------
 
@@ -265,11 +275,11 @@ FLAGS_EXTENDED <="00000000000000000000000000000"&FLAGS;
 ALU_result_cut <= ALU_result(10 downto 0);
 ADD_0<="00000000000";
 
-MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>new_write_select_toMux2x1(1),S0=>new_write_select_toMux2x1(0),Z=>WRITE_DATA);
+MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>new_write_select_toMux4x1(1),S0=>new_write_select_toMux4x1(0),Z=>WRITE_DATA);
 
 MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_beforeadd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);
 
---MUX_4X1_to_Address: mux_4x1 generic map(11) port map(A=>MUX_2x1_to_mem_out,B=>ADD_0,C=>ADD_2,D=>ADD_0,S1=>MSB_SELEC_MUX4x1_Address,S0=>reset,Z=>MEMORY_ADDRESS); ----SELECTION LINES NEED TO BE REVIEWED
+MUX_4X1_to_Address: mux_4x1 generic map(11) port map(A=>MUX_2x1_to_mem_out,B=>ADD_0,C=>ADD_2,D=>ADD_0,S1=>MSB_SELEC_MUX4x1_Address,S0=>reset,Z=>MEMORY_ADDRESS); ----SELECTION LINES NEED TO BE REVIEWED
 
 --------------MEMORY_MAPPING_(SP circuit)-----------------------
 ADD_2<="00000000010";
@@ -293,12 +303,24 @@ MUX_4X1_to_Counter: mux_4x1 generic map(2) port map(A=>MUX_4X1_to_Counter_LOAD0,
 
 Counter_multi_cycle: down_counter port map(clock=>clk,reset=>reset,enable=>new_counter_enable,load_data=>MUX_4X1_to_Counter_OUT,output=>counter_output);
 
-multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_control,WSel=>multi_cycle_write_select,BatM=>NEW_BRANCH_atMEM,RM=>mem_read_control,WM=>mem_write_control,Stack=>stack_enable,NRM=>new_read_mem,NWM=>new_write_mem,NStack=>new_stack_enable,cenable=>new_counter_enable,NWSel=>new_write_select_toMux2x1);
+multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_control,WSel=>multi_cycle_write_select,BatM=>NEW_BRANCH_atMEM,RM=>mem_read_control,WM=>mem_write_control,Stack=>stack_enable,NRM=>new_read_mem,NWM=>new_write_mem,NStack=>new_stack_enable,cenable=>new_counter_enable,NWSel=>new_write_select_toMux4x1);
 
 stall_memory<=counter_output(1) or counter_output(0);
 WIRE_MEM_TO_EXEC<=counter_output(0) and counter_control(0);
 
 MSB_SELEC_MUX4x1_Address<=new_read_mem and counter_control(1);
+--------------------MEMORY_MAPPING_RAM------------------
+
+MEMORY: ram port map(clk=>clk,we=>new_write_mem,address=>MEMORY_ADDRESS,datain=>WRITE_DATA,dataout=>READ_DATA);
+---------------------MEM/WB BUFFER_OUT_SIGNALS----------------------
+signal OP_R_ENABLE: std_logic;
+signal WRITEBACK: std_logic_vector(2 downto 0);
+--read data already 
+signal ALU_RESULT: std_logic_vector(31 downto 0);
+---------------------MEM/WB BUFFER_MAPPING----------------------
+
+MEM_WB_BUFFER: G_Register generic map(109) port map();
+
 ------------------Control Unit MUX-------------
 BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DIMDTRSRC&DFlgen&Dflgsel;
 AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "00000000000000000000";
