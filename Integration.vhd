@@ -275,7 +275,7 @@ imdtvalue<=foutbuffer(59 downto 44);
 EAadress<=foutbuffer(54 downto  44);
 inputport<=foutbuffer(31 downto 0);
 -------------------Decode Write Register MUX---
-WriteReg2<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
+WriteReg1<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
 -----------------------------------------------
 -------------------Extend MUX------------------
 imdtExtend<="0000000000000000"&imdtValue;
