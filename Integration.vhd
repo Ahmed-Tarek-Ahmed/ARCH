@@ -171,6 +171,8 @@ signal TEMP_MUX_BEFOREMEM : std_logic_vector(1 downto 0);
 signal counter_control: std_logic_vector(1 downto 0);
 signal branch_atMEM,mem_read_control,mem_write_control,stack_enable,inc_dec: std_logic;
 ------------------Memory signals (NOT TEMP)---------------
+signal FLAGS_EXTENDED:  std_logic_vector(31 downto 0);
+signal ALU_result_cut:  std_logic_vector(10 downto 0);
 signal ADD_2: std_logic_vector(10 downto 0);
 signal ADD_neg2: std_logic_vector(10 downto 0);
 signal ADD_0: std_logic_vector(10 downto 0);
