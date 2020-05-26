@@ -126,7 +126,7 @@ component ram is
 		dataout : OUT std_logic_vector(31 DOWNTO 0));
 END component;
 --------------------Fetch-----------------------
-signal PcE1,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
+signal PcE1,PcM,pcm01,pcadd,npc,FPC,PCE: std_logic_vector(10 downto 0);
 signal BatE,BatM,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
 signal opcodeF:std_logic_vector(5 downto 0);
@@ -248,7 +248,7 @@ signal OUTbuffer_D : std_logic_vector(137 downto 0);
 -----------------------------------------------
 begin
 ------------------fetch------------------------------------
-pce1<= Rsrc1D;
+pce1<= Rsrc1D(10 downto 0);
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(batm,bate,reset,pce1,pcm,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,FPC,clk,reset,pcen);
