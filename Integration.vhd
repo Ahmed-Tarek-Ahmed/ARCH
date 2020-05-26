@@ -165,7 +165,7 @@ signal ALU_result_cut:  std_logic_vector(10 downto 0);
 ------------------Memory signals (TEMP)---------------
 signal ALU_result:  std_logic_vector(31 downto 0);
 signal RSRC1_data:  std_logic_vector(31 downto 0);
-signal PC_OUT:  std_logic_vector(31 downto 0);
+signal PC_OUT:  std_logic_vector(10 downto 0);
 signal FLAGS:  std_logic_vector(2 downto 0);
 
 signal TEMP_MUX_BEFOREMEM : std_logic_vector(1 downto 0);
@@ -173,7 +173,14 @@ signal TEMP_MUX_BEFOREMEM : std_logic_vector(1 downto 0);
 signal multi_cycle_write_select: std_logic;
 signal counter_control: std_logic_vector(1 downto 0);
 signal branch_atMEM,mem_read_control,mem_write_control,stack_enable,inc_dec: std_logic;
+
+signal Rsrc1MemB,Rsrc2MemB,RdstMemB: std_logic_vector(2 downto 0);
+signal Rsrc2dataMemB : std_logic_vector(31 downto 0);
+signal WBMemB : std_logic_vector(2 downto 0);
+signal opregMemB : std_logic;
+
 signal WIRE_MEM_TO_EXEC: std_logic;
+
 ------------------Memory signals (NOT TEMP)---------------
 signal ADD_2: std_logic_vector(10 downto 0);
 signal ADD_neg2: std_logic_vector(10 downto 0);
@@ -226,10 +233,11 @@ signal FlagsE,Flagsin,FlagsO : std_logic_vector(2 downto 0);
 signal PCEX : std_logic_vector(10 downto 0);
 signal CounterConDB,CounterConE : std_logic_vector(1 downto 0);
 signal BrnchMemDB,BrnchMemE,OpRegEnDB,OpRegEnE : std_logic;
-signal MEMDB,MEME : std_logic_vector(2 downto 0);
+signal MEMDB,MEME : std_logic_vector(4 downto 0);
 signal WBDB,WBE : std_logic_vector(2 downto 0);
 signal trashcan : std_logic;
 signal Rsc1DB,Rsc1E,Rsc2DB,Rsc2E,RdstDB,RdstE : std_logic_vector(2 downto 0);
+signal EXBufferin,EXBufferout : std_logic_vector(128 downto 0);
 ------------------ID/EXE Buffer signal---------
 signal INbuffer_D: std_logic_vector(135 downto 0);
 signal OUTbuffer_D : std_logic_vector(135 downto 0);
@@ -354,8 +362,26 @@ else "000" when BranchatMem ='1';
 Rsc1E  <= Rsc1DB;
 Rsc2E <= Rsc2DB;
 RdstE <= RdstDB;
+EXBufferin <= CounterConE & BrnchMemE & OpRegEnE & MEME & WBE & Flagsin & ALURes & ALuin1 & PCEX & RdstE & ALuin2 & Rsc2E & Rsc1E;
+EXecBuffer : G_Register generic map (131) port map (EXBufferin,EXBufferout,clk,reset,ONE);
+ALU_result <= EXBufferout(46 downto 15);
+RSRC1_data <= EXBufferout(78 downto 47);
+PC_OUT <= EXBufferout(89 downto 79);
+FLAGS <= EXBufferout(14 downto 12);
+counter_control <= EXBufferout(1 downto 0);
+branch_atMEM <= EXBufferout(2);
+multi_cycle_write_select <= EXBufferout(7);
+mem_read_control <= EXBufferout(8);
+mem_write_control <= EXBufferout(9);
+stack_enable <= EXBufferout(10);
+inc_dec <= EXBufferout(11);
+Rsrc1MemB <= EXBufferout(130 downto 128);
+Rsrc2MemB <= EXBufferout(127 downto 125);
+RdstMem <= EXBufferout(92 downto 90);
+Rsrc2dataMemB <= EXBufferout(124 downto 93);
+WBMemB <= EXBufferout(6 downto 4);
+opregMemB <= EXBufferout(3);
 -----------------------------------------------
-
 
 ------------------ID/EXE Buffer----------------
 INbuffer_D<=AfterCUMUX&PC&ReadData1&ReadData2&imdtValueSelected&Rdst&Rsrc2&Rsrc1;
