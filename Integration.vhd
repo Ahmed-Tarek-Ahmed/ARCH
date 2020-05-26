@@ -370,16 +370,16 @@ PC_OUT <= EXBufferout(89 downto 79);
 FLAGS <= EXBufferout(14 downto 12);
 counter_control <= EXBufferout(1 downto 0);
 branch_atMEM <= EXBufferout(2);
-multi_cycle_write_select <= EXBufferout(7);
-mem_read_control <= EXBufferout(8);
-mem_write_control <= EXBufferout(9);
-stack_enable <= EXBufferout(10);
-inc_dec <= EXBufferout(11);
+multi_cycle_write_select <= EXBufferout(4);
+mem_read_control <= EXBufferout(5);
+mem_write_control <= EXBufferout(6);
+stack_enable <= EXBufferout(7);
+inc_dec <= EXBufferout(8);
 Rsrc1MemB <= EXBufferout(130 downto 128);
 Rsrc2MemB <= EXBufferout(127 downto 125);
 RdstMem <= EXBufferout(92 downto 90);
 Rsrc2dataMemB <= EXBufferout(124 downto 93);
-WBMemB <= EXBufferout(6 downto 4);
+WBMemB <= EXBufferout(11 downto 9);
 opregMemB <= EXBufferout(3);
 -----------------------------------------------
 
