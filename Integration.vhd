@@ -174,11 +174,6 @@ signal multi_cycle_write_select: std_logic;
 signal counter_control: std_logic_vector(1 downto 0);
 signal branch_atMEM,mem_read_control,mem_write_control,stack_enable,inc_dec: std_logic;
 
-signal Rsrc1MemB,Rsrc2MemB,RdstMemB: std_logic_vector(2 downto 0);
-signal Rsrc2dataMemB : std_logic_vector(31 downto 0);
-signal WBMemB : std_logic_vector(2 downto 0);
-signal opregMemB : std_logic;
-
 signal WIRE_MEM_TO_EXEC: std_logic;
 
 ------------------Memory signals (NOT TEMP)---------------
@@ -212,13 +207,15 @@ signal new_write_select_toMux4x1: std_logic_vector(1 downto 0);
 signal MSB_SELEC_MUX4x1_Address: std_logic;
 --------------------------------------------------------------------
 ---------------------MEM/WB BUFFER_OUT_SIGNALS----------------------
-signal OP_R_ENABLE: std_logic;
-signal WRITEBACK: std_logic_vector(2 downto 0);
 --read data already 
-signal RDST: std_logic_vector(2 downto 0);
-signal RSRC2_DATA: std_logic_vector(31 downto 0);
-signal RSRC2: std_logic_vector(2 downto 0);
-
+signal Rsrc1MemB,Rsrc2MemB,RdstMemB: std_logic_vector(2 downto 0);
+signal Rsrc2dataMemB : std_logic_vector(31 downto 0);
+--RESULT already declared
+signal WBMemB : std_logic_vector(2 downto 0);
+signal opregMemB : std_logic;
+signal BUS_TO_MEM_WB_BUFFER_IN: std_logic_vector(108 downto 0); 
+signal BUS_TO_MEM_WB_BUFFER_OUT: std_logic_vector(108 downto 0); 
+signal ENABLE_BUFFER_MEM_TO_WB: std_logic;
 -----------------------------------------------
 ------------------Control Unit Signals---------
 signal DAlUF : std_logic_vector(3 DOWNTO 0);
@@ -329,8 +326,17 @@ MSB_SELEC_MUX4x1_Address<=new_read_mem and counter_control(1);
 MEMORY: ram port map(clk=>clk,we=>new_write_mem,address=>MEMORY_ADDRESS,datain=>WRITE_DATA,dataout=>READ_DATA);
 
 ---------------------MEM/WB BUFFER_MAPPING----------------------
+--signal opregMemB 
+--signal WBMemB 
+--read data already 
+--ALU_RESULT already declared
+--signal Rsrc1MemB,Rsrc2MemB,RdstMemB
+--signal Rsrc2dataMemB 
 
-MEM_WB_BUFFER: G_Register generic map(109) port map();
+BUS_TO_MEM_WB_BUFFER_IN<=opregMemB & WBMemB & READ_DATA & ALU_RESULT & RdstMemB & Rsrc2dataMemB & Rsrc2MemB & Rsrc1MemB;
+ENABLE_BUFFER_MEM_TO_WB<='1';
+
+MEM_WB_BUFFER: G_Register generic map(109) port map(D=>BUS_TO_MEM_WB_BUFFER_IN,Q=>BUS_TO_MEM_WB_BUFFER_OUT,clk=>clk,rst=>reset,enable=>ENABLE_BUFFER_MEM_TO_WB);
 
 ------------------Control Unit MUX-------------
 BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&Dstacken&Dstackcont&DMWsel&DAlUF&DIMDTRSRC&DFlgen&Dflgsel;
@@ -357,7 +363,7 @@ else '0' when BranchatMem ='1';
 OpRegEnE  <= OpRegEnDB when BranchatMem='0'
 else '0' when BranchatMem ='1';
 MEME   <= MEMDB when BranchatMem='0'
-else "000" when BranchatMem ='1';
+else "00000" when BranchatMem ='1';
 WBE  <= WBDB when BranchatMem='0'
 else "000" when BranchatMem ='1'; 
 Rsc1E  <= Rsc1DB;
