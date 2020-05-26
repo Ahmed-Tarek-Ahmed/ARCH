@@ -126,7 +126,7 @@ component ram is
 		dataout : OUT std_logic_vector(31 DOWNTO 0));
 END component;
 --------------------Fetch-----------------------
-signal PcE,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
+signal PcE1,PcM,pcm01,pcadd,npc,FPC: std_logic_vector(10 downto 0);
 signal BatE,BatM,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
 signal opcodeF:std_logic_vector(5 downto 0);
@@ -229,7 +229,7 @@ signal OrOUT : std_logic;
 -----------------------Execute-----------------
 signal Aluin1,Aluin2,ALURes : std_logic_vector(31 downto 0);
 signal Rsrc1D,Rscr2D,Immval : std_logic_vector(31 downto 0);
-signal BranchatMem,FlagED,AndMem,FlagEnable,Flag2F,ALUCont : std_logic;
+signal BranchatMem,FlagED,AndMem,FlagEnable,ALUCont : std_logic;
 signal FlagsMem : std_logic_vector(2 downto 0);
 signal FlagSelec : std_logic_vector(1 downto 0);
 signal AluCon : std_logic_vector(3 downto 0);
@@ -248,19 +248,22 @@ signal OUTbuffer_D : std_logic_vector(137 downto 0);
 -----------------------------------------------
 begin
 ------------------fetch------------------------------------
+pce1<= Rsrc1D;
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
-pcmux1:pcmux port map(batm,bate,reset,pce,pcm,pcadd,pcm01,npc);
-pcreg: G_register generic map(11) port map(npc,PC,clk,reset,pcen);
+pcmux1:pcmux port map(batm,bate,reset,pce1,pcm,pcadd,pcm01,npc);
+pcreg: G_register generic map(11) port map(npc,FPC,clk,reset,pcen);
 instmem1:instmem port map(Fpc,inst);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset);
-BatE<=((not flag)and branchE(1)) or branchE(0);
+BatE<=(flag and branchE(1)) or branchE(0);
 pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
 pcinc<= "00000000001" when inst(26)='1' else
 	"00000000010";
 opcodeF <= inst(31 downto 26) when fflush='0'
 	else "000000";
+fflush<=BatE or NEW_BRANCH_atMEM;
 Finbuffer<= opcodeF & inst(25 downto 0) & intr & fpc & input;
 fdbuffer:G_register generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,ONE);
+
 ---------------------------------------------------------------
 opcode<= foutbuffer(75 downto 70);
 intrpt<=foutbuffer(43);
@@ -351,7 +354,7 @@ FlagEnable <= (FlagED AND BranchatMem) OR AndMem;
 FlagsE <= FlagsO when AndMem='0'
 else FlagsMem when AndMem='1';
 FlagReg : G_Register generic map(3) port map(FlagsE,Flagsin,clk,reset,FlagEnable);
-Flag2F <= Flagsin(0) when FlagSelec = "00"
+Flag <= Flagsin(0) when FlagSelec = "00"
 else Flagsin(1) when FlagSelec = "01"
 else Flagsin(2) when FlagSelec = "10";
 Aluin1 <= Rsrc1D;
