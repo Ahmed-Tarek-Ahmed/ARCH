@@ -166,6 +166,7 @@ signal ALU_result_cut:  std_logic_vector(10 downto 0);
 signal ALU_result:  std_logic_vector(31 downto 0);
 signal RSRC1_data:  std_logic_vector(31 downto 0);
 signal PC_OUT:  std_logic_vector(10 downto 0);
+signal PC_OUT_EXTEND:  std_logic_vector(31 downto 0);
 signal FLAGS:  std_logic_vector(2 downto 0);
 
 signal TEMP_MUX_BEFOREMEM : std_logic_vector(1 downto 0);
@@ -299,8 +300,9 @@ ELSE  EAExtend  when imdtSelector="10";
 FLAGS_EXTENDED <="00000000000000000000000000000"&FLAGS;
 ALU_result_cut <= ALU_result(10 downto 0);
 ADD_0<="00000000000";
+PC_OUT_EXTEND<="000000000000000000000" & PC_OUT;
 
-MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>new_write_select_toMux4x1(1),S0=>new_write_select_toMux4x1(0),Z=>WRITE_DATA);
+MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT_EXTEND,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>new_write_select_toMux4x1(1),S0=>new_write_select_toMux4x1(0),Z=>WRITE_DATA);
 
 MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_beforeadd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);
 
