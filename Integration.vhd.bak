@@ -435,6 +435,14 @@ Rsrc2dataMemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(37 downto 6);
 Rsrc2MemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(5 downto 3);
 Rsrc1MemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(2 downto 0);
 
+RdstMEM<=RdstMemB_WB;
+WriteData2_MEM<=Rsrc2dataMemB_WB;
+Rsrc2MEM<=Rsrc2MemB_WB;
+WriteReg2<=Rsrc1MemB_WB;
+WriteBack2_MEM<=WBMemB_WB(107);
+WriteBack1_MEM<=WBMemB_WB(106);
+---------------WB_STAGE_MAPPING------------------------ 
+
 -----------------------------------------------
 
 END Architecture;
