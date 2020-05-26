@@ -160,6 +160,46 @@ signal Rsc1DB,Rsc1E,Rsc2DB,Rsc2E,RdstDB,RdstE : std_logic_vector(2 downto 0);
 signal INbuffer_D: std_logic_vector(134 downto 0);
 signal OUTbuffer_D : std_logic_vector(134 downto 0);
 -----------------------------------------------
+------------------Memory signals (TEMP)---------------
+signal ALU_result:  std_logic_vector(31 downto 0);
+signal RSRC1_data:  std_logic_vector(31 downto 0);
+signal PC_OUT:  std_logic_vector(31 downto 0);
+signal FLAGS:  std_logic_vector(2 downto 0);
+
+signal TEMP_MUX_BEFOREMEM : std_logic_vector(1 downto 0);
+
+signal counter_control: std_logic_vector(1 downto 0);
+signal branch_atMEM,mem_read_control,mem_write_control,stack_enable,inc_dec: std_logic;
+------------------Memory signals (NOT TEMP)---------------
+signal ADD_2: std_logic_vector(10 downto 0);
+signal ADD_neg2: std_logic_vector(10 downto 0);
+signal ADD_0: std_logic_vector(10 downto 0);
+
+signal cin_SP: std_logic;
+signal cout_SP: std_logic;
+signal NADDER_output: std_logic_vector(10 downto 0);
+signal SP_OUTPUT: std_logic_vector(10 downto 0);
+
+signal MUX_2x1_beforeadd_out: std_logic_vector(10 downto 0);
+signal MUX_2x1_to_mem_out: std_logic_vector(1 downto 0); 
+signal MUX_4X1_to_Counter_LOAD0:std_logic_vector(1 downto 0);
+signal MUX_4X1_to_Counter_LOAD2:std_logic_vector(1 downto 0);
+signal MUX_4X1_to_Counter_LOAD3:std_logic_vector(1 downto 0);
+signal MUX_4X1_to_Counter_LOADVOID:std_logic_vector(1 downto 0);
+signal MUX_4X1_to_Counter_OUT:std_logic_vector(1 downto 0);
+
+signal counter_enable:std_logic;
+signal counter_output: std_logic_vector(1 downto 0);
+
+signal MEMORY_ADDRESS: std_logic_vector(10 downto 0);
+signal WRITE_DATA: std_logic_vector(31 downto 0);
+
+signal stall_memory: std_logic;
+signal NEW_BRANCH_atMEM: std_logic;
+signal multi_cycle_write_select: std_logic_vector(1 downto 0);
+signal new_read_mem,new_write_mem,new_stack_enable,new_counter_enable: std_logic;
+signal new_write_select_toMux2x1: std_logic_vector(1 downto 0);
+---------------------------------------------------------------------------------
 begin
 ------------------fetch------------------------------------
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
@@ -233,5 +273,44 @@ RdstE <= RdstDB;
 INbuffer_D<=AfterCUMUX&PC&ReadData1&ReadData2&imdtValueSelected&Rdst&Rsrc2&Rsrc1;
 ID_EXE: G_register generic map (135) port map (INbuffer_D,OUTbuffer_D,clk,reset,ONE);
 -----------------------------------------------
+-------------MEMORY_MAPPING_(MUXES BEFORE RAM)-----------------
+	--(without multi_cycle)--
+--extend flags--
+FLAGS_EXTENDED <="00000000000000000000000000000"&FLAGS;
+ALU_result_cut <= ALU_result(10 downto 0);
+ADD_0<="00000000000";
 
+MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>new_write_select_toMux2x1(1),S0=>new_write_select_toMux2x1(0),Z=>WRITE_DATA);
+
+MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_beforeadd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);
+
+--MUX_4X1_to_Address: mux_4x1 generic map(11) port map(A=>MUX_2x1_to_mem_out,B=>ADD_0,C=>ADD_2,D=>ADD_0,S1=>multi_cycle_output(1),S0=>multi_cycle_output(0),Z=>MEMORY_ADDRESS); ----SELECTION LINES NEED TO BE REVIEWED
+
+--------------MEMORY_MAPPING_(SP circuit)-----------------------
+ADD_2<="00000000010";
+ADD_neg2<="11111111110";
+cin_SP<='0';
+
+STACK_POINTER: G_Register generic map(11) port map(D=>NADDER_output,Q=>SP_OUTPUT,clk=>clk,rst=>reset,enable=>new_stack_enable);
+
+MUX_2x1_beforeadd: mux_2x1 generic map(11) port map(A=>ADD_2,B=>ADD_neg2,S0=>inc_dec,Z=>MUX_2x1_beforeadd_out);
+
+SP_ADDER: NADDER generic map(11) port map(A1=>SP_OUTPUT,B1=>MUX_2x1_beforeadd_out,cin1=>cin_SP,cout1=>cout_SP,sum=>NADDER_output);
+
+MUX_2x1_afteradd: mux_2x1 generic map(11) port map(A=>NADDER_output,B=>SP_OUTPUT,S0=>inc_dec,Z=>MUX_2x1_beforeadd_out);
+------------MEMORY_MAPPING_(MULTI_CYCLE _CIRCUIT)------------------
+MUX_4X1_to_Counter_LOAD0<="00";
+MUX_4X1_to_Counter_LOAD2<="10";
+MUX_4X1_to_Counter_LOAD3<="11";
+MUX_4X1_to_Counter_LOADVOID<="00";
+
+MUX_4X1_to_Counter: mux_4x1 generic map(2) port map(A=>MUX_4X1_to_Counter_LOAD0,B=>MUX_4X1_to_Counter_LOAD2,C=>MUX_4X1_to_Counter_LOAD3,D=>MUX_4X1_to_Counter_LOADVOID,S1=>counter_control(1),S0=>counter_control(0),Z=>MUX_4X1_to_Counter_OUT);
+
+Counter_multi_cycle: down_counter port map(clock=>clk,reset=>reset,enable=>counter_enable,load_data=>MUX_4X1_to_Counter_OUT,output=>counter_output);
+
+multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_control,WSel=>multi_cycle_write_select,BatM=>branch_atMEM,RM=>mem_read_control,WM=>mem_write_control,Stack=>stack_enable,NRM=>new_read_mem,NWM=>new_write_mem,NStack=>new_stack_enable,cenable=>new_counter_enable,NWSel=>new_write_select_toMux2x1);
+
+stall_memory<=counter_output(1) or counter_output(0);
+NEW_BRANCH_atMEM<=counter_output(0) and counter_control(0);
+---------------------------------------------
 END Architecture;
