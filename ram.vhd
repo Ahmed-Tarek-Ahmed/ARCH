@@ -7,7 +7,7 @@ ENTITY ram IS
 		clk : IN std_logic;
 		we  : IN std_logic;
 		address : IN  std_logic_vector(10 DOWNTO 0);
-		datain  : IN  std_logic_vector(15 DOWNTO 0);
+		datain  : IN  std_logic_vector(31 DOWNTO 0);
 		dataout : OUT std_logic_vector(31 DOWNTO 0));
 END ENTITY ram;
 
@@ -21,7 +21,8 @@ ARCHITECTURE syncrama OF ram IS
 			BEGIN
 				IF falling_edge(clk) THEN  
 					IF we = '1' THEN
-						ram(to_integer(unsigned(address))) <= datain;
+						ram(to_integer(unsigned(address))) <= datain(31 downto 16);
+						ram(to_integer(unsigned(address))+1) <= datain(15 downto 0);
 					END IF;
 				END IF;
 		END PROCESS;

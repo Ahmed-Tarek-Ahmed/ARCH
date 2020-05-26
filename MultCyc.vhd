@@ -4,8 +4,8 @@ USE IEEE.numeric_std.all;
 
 ENTITY MultCyc IS
 	PORT(
-		C,CControl,WSel: IN  std_logic_vector(1 DOWNTO 0);
-		BatM,RM,WM,Stack : IN  std_logic;
+		C,CControl: IN  std_logic_vector(1 DOWNTO 0);
+		BatM,RM,WM,Stack,WSel : IN  std_logic;
 		NBatM,NRM,NWM,NStack,cenable: OUT std_logic;
 		NWSel: OUT std_logic_vector(1 DOWNTO 0));
 END ENTITY MultCyc;
@@ -19,7 +19,8 @@ if(C="00")then
 	NRM<=Rm;
 	nwm<=wm;
 	nstack<=stack;
-	nwsel<=wsel;
+	nwsel(0)<=wsel;
+    	nwsel(1)<='0';
 elsif(C="10" )then
 	if(ccontrol="01")then
 	nbatm<='1';
