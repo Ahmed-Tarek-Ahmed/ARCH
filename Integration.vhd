@@ -216,8 +216,15 @@ signal opregMemB : std_logic;
 signal BUS_TO_MEM_WB_BUFFER_IN: std_logic_vector(108 downto 0); 
 signal BUS_TO_MEM_WB_BUFFER_OUT: std_logic_vector(108 downto 0); 
 signal ENABLE_BUFFER_MEM_TO_WB: std_logic;
------------------------------------------------
-------------------Control Unit Signals---------
+---------------------WB_SIGNALS_FROMBUFFER---------------------
+signal Rsrc1MemB_WB,Rsrc2MemB_WB,RdstMemB_WB: std_logic_vector(2 downto 0);
+signal Rsrc2dataMemB_WB : std_logic_vector(31 downto 0);
+signal WBMemB_WB : std_logic_vector(2 downto 0);
+signal opregMemB_WB : std_logic;
+signal ALU_result_WB:  std_logic_vector(31 downto 0);
+signal READ_DATA_WB: std_logic_vector(31 downto 0); 
+
+------------------Control Unit Signals-------------------------
 signal DAlUF : std_logic_vector(3 DOWNTO 0);
 signal Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel : std_logic_vector(1 DOWNTO 0);
 signal DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen: std_logic;
@@ -416,6 +423,20 @@ Immval<=OUTbuffer_D(40 downto 9);
 RdstDB<=OUTbuffer_D(8 downto 6);
 Rsc2DB<=OUTbuffer_D(5 downto 3);
 Rsc1DB<=OUTbuffer_D(2 downto 0);
+-----------------------------------------------
+---------------WB_STAGE------------------------ 
+
+opregMemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(108);
+WBMemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(107 downto 105);
+READ_DATA_WB<=BUS_TO_MEM_WB_BUFFER_OUT(104 downto 73);
+ALU_result_WB<=BUS_TO_MEM_WB_BUFFER_OUT(72 downto 41);
+RdstMemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(40 downto 38);
+Rsrc2dataMemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(37 downto 6);
+Rsrc2MemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(5 downto 3);
+Rsrc1MemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(2 downto 0);
+
+---------------WB_STAGE_MAPPING------------------------ 
+
 -----------------------------------------------
 
 END Architecture;
