@@ -207,8 +207,8 @@ signal MSB_SELEC_MUX4x1_Address: std_logic;
 signal DAlUF : std_logic_vector(3 DOWNTO 0);
 signal Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel : std_logic_vector(1 DOWNTO 0);
 signal DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen: std_logic;
-signal BeforeCUMUX : std_logic_vector (19 downto 0);
-signal AfterCUMUX : std_logic_vector (19 downto 0);
+signal BeforeCUMUX : std_logic_vector (21 downto 0);
+signal AfterCUMUX : std_logic_vector (21 downto 0);
 signal OrOUT : std_logic;
 -----------------------------------------------
 
@@ -229,8 +229,8 @@ signal trashcan : std_logic;
 signal Rsc1DB,Rsc1E,Rsc2DB,Rsc2E,RdstDB,RdstE : std_logic_vector(2 downto 0);
 signal EXBufferin,EXBufferout : std_logic_vector(128 downto 0);
 ------------------ID/EXE Buffer signal---------
-signal INbuffer_D: std_logic_vector(135 downto 0);
-signal OUTbuffer_D : std_logic_vector(135 downto 0);
+signal INbuffer_D: std_logic_vector(137 downto 0);
+signal OUTbuffer_D : std_logic_vector(137 downto 0);
 -----------------------------------------------
 begin
 ------------------fetch------------------------------------
@@ -308,8 +308,8 @@ WIRE_MEM_TO_EXEC<=counter_output(0) and counter_control(0);
 
 MSB_SELEC_MUX4x1_Address<=new_read_mem and counter_control(1);
 ------------------Control Unit MUX-------------
-BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&DMWsel&DAlUF&DIMDTRSRC&DFlgen&Dflgsel;
-AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "00000000000000000000";
+BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&Dstacken&Dstackcont&DMWsel&DAlUF&DIMDTRSRC&DFlgen&Dflgsel;
+AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000000";
 -----------------------------------------------
 
 -----------------------Execute-----------------
@@ -361,13 +361,13 @@ opregMemB <= EXBufferout(3);
 
 ------------------ID/EXE Buffer----------------
 INbuffer_D<=AfterCUMUX&PC&ReadData1&ReadData2&imdtValueSelected&Rdst&Rsrc2&Rsrc1;
-ID_EXE: G_register generic map (136) port map (INbuffer_D,OUTbuffer_D,clk,reset,ONE);
-CounterConDB<=OUTbuffer_D(135 downto 134);
-BrnchMemDB<=OUTbuffer_D(133);
-BranchE<=OUTbuffer_D(132 downto 131);
-OpRegEnDB<=OUTbuffer_D(130);
-WBDB<=OUTbuffer_D(129 downto 127);
-MEMDB<=OUTbuffer_D(126 downto 124);
+ID_EXE: G_register generic map (138) port map (INbuffer_D,OUTbuffer_D,clk,reset,ONE);
+CounterConDB<=OUTbuffer_D(137 downto 136);
+BrnchMemDB<=OUTbuffer_D(135);
+BranchE<=OUTbuffer_D(134 downto 133);
+OpRegEnDB<=OUTbuffer_D(132);
+WBDB<=OUTbuffer_D(131 downto 129);
+MEMDB<=OUTbuffer_D(128 downto 124);
 ALUCON<=OUTbuffer_D(123 downto 120);
 AlUCONT<=OUTbuffer_D(119);
 FlagEnable<=OUTbuffer_D(118);
