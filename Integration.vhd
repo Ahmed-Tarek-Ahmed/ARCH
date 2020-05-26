@@ -223,7 +223,10 @@ signal WBMemB_WB : std_logic_vector(2 downto 0);
 signal opregMemB_WB : std_logic;
 signal ALU_result_WB:  std_logic_vector(31 downto 0);
 signal READ_DATA_WB: std_logic_vector(31 downto 0); 
-
+---------------------WB_SIGNALS--------------------------------
+signal MUX2x1_WB_OUT:std_logic_vector(31 downto 0);
+signal OUTPUT_PORT_FINAL:std_logic_vector(31 downto 0); 
+signal ENABLE_OUTPUT_PORT: std_logic;
 ------------------Control Unit Signals-------------------------
 signal DAlUF : std_logic_vector(3 DOWNTO 0);
 signal Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel : std_logic_vector(1 DOWNTO 0);
@@ -436,6 +439,11 @@ Rsrc2MemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(5 downto 3);
 Rsrc1MemB_WB<=BUS_TO_MEM_WB_BUFFER_OUT(2 downto 0);
 
 ---------------WB_STAGE_MAPPING------------------------ 
+MUX2x1_FROM_MEM_WB_BUFFER: mux_2x1 generic map(32) port map(A=>READ_DATA_WB,B=>ALU_result_WB,S0=>WBMemB_WB(2),Z=>MUX2x1_WB_OUT);
+
+WriteData1<=MUX2x1_WB_OUT;
+
+OUTPUT_PORT: G_Register generic map(32) port map(D=>ALU_result_WB,Q=>OUTPUT_PORT_FINAL,clk=>clk,rst=>reset,enable=>opregMemB_WB);
 
 -----------------------------------------------
 
