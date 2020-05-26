@@ -210,7 +210,14 @@ signal NEW_BRANCH_atMEM: std_logic;
 signal new_read_mem,new_write_mem,new_stack_enable,new_counter_enable: std_logic;
 signal new_write_select_toMux4x1: std_logic_vector(1 downto 0);
 signal MSB_SELEC_MUX4x1_Address: std_logic;
----------------------------------------------------------------------------------
+--------------------------------------------------------------------
+---------------------MEM/WB BUFFER_OUT_SIGNALS----------------------
+signal OP_R_ENABLE: std_logic;
+signal WRITEBACK: std_logic_vector(2 downto 0);
+--read data already 
+signal RDST: std_logic_vector(2 downto 0);
+signal RSRC2_DATA: std_logic_vector(31 downto 0);
+signal RSRC2: std_logic_vector(2 downto 0);
 
 -----------------------------------------------
 ------------------Control Unit Signals---------
@@ -320,13 +327,7 @@ MSB_SELEC_MUX4x1_Address<=new_read_mem and counter_control(1);
 --------------------MEMORY_MAPPING_RAM------------------
 
 MEMORY: ram port map(clk=>clk,we=>new_write_mem,address=>MEMORY_ADDRESS,datain=>WRITE_DATA,dataout=>READ_DATA);
----------------------MEM/WB BUFFER_OUT_SIGNALS----------------------
-signal OP_R_ENABLE: std_logic;
-signal WRITEBACK: std_logic_vector(2 downto 0);
---read data already 
-signal ALU_RESULT: std_logic_vector(31 downto 0);
-signal RDST: std_logic_vector(2 downto 0);
-signal RSRC2_DATA: std_logic_vector(31 downto 0);
+
 ---------------------MEM/WB BUFFER_MAPPING----------------------
 
 MEM_WB_BUFFER: G_Register generic map(109) port map();
