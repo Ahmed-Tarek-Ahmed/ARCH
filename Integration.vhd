@@ -264,7 +264,7 @@ begin
 pce1<= Rsrc1D(10 downto 0);
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(batm,bate,reset,pce1,pcm,pcadd,pcm01,npc);
-pcreg: G_register generic map(11) port map(npc,FPC,clk,reset,pcen);
+pcreg: G_register generic map(11) port map(npc,FPC,clk,zero,pcen);
 instmem1:instmem port map(Fpc,inst);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset,r0,r1,r2,r3,r4,r5,r6,r7);
 BatE<=(flag and branchE(1)) or branchE(0);
