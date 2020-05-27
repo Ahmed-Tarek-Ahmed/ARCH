@@ -98,7 +98,14 @@ port(A1,B1 :IN std_logic_vector (n-1 downto 0);
 	Cout1:OUT std_Logic;
 	sum: OUT std_logic_vector(n-1 downto 0));
 end component;
+component stack IS
 
+port(
+  D:IN std_logic_vector(10 downto 0);
+  Q:OUT std_logic_vector(10 downto 0):="11111111110";
+  clk,rst,enable:IN std_Logic
+);
+END component;
 -------------------4x1 mux-----------------------
 component mux_4x1 is
 GENERIC (n : integer := 32);
@@ -261,6 +268,7 @@ signal OUTbuffer_D : std_logic_vector(137 downto 0);
 -----------------------------------------------
 begin
 ------------------fetch------------------------------------
+pcm01<=READ_DATA;
 pce1<= Rsrc1D(10 downto 0);
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(batm,bate,reset,pce1,pcm,pcadd,pcm01,npc);
@@ -315,7 +323,7 @@ ADD_2<="00000000010";
 ADD_neg2<="11111111110";
 cin_SP<='0';
 
-STACK_POINTER: G_Register generic map(11) port map(D=>NADDER_output,Q=>SP_OUTPUT,clk=>clk,rst=>reset,enable=>new_stack_enable);
+STACK_POINTER: stack  port map(D=>NADDER_output,Q=>SP_OUTPUT,clk=>clk,rst=>reset,enable=>new_stack_enable);
 
 MUX_2x1_beforeadd: mux_2x1 generic map(11) port map(A=>ADD_2,B=>ADD_neg2,S0=>inc_dec,Z=>MUX_2x1_beforeadd_out);
 
