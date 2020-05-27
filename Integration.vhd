@@ -278,7 +278,7 @@ instmem1:instmem port map(Fpc,inst);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset,r0,r1,r2,r3,r4,r5,r6,r7);
 BatE<=(flag and branchE(1)) or branchE(0);
 pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
-pcinc<= "00000000001" when inst(26)='1' else
+pcinc<= "00000000001" when inst(26)='0' else
 	"00000000010";
 opcodeF <= inst(31 downto 26) when fflush='0'
 	else "000000";
