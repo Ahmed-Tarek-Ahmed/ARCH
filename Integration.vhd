@@ -235,7 +235,6 @@ signal ALU_result_WB:  std_logic_vector(31 downto 0);
 signal READ_DATA_WB: std_logic_vector(31 downto 0); 
 ---------------------WB_SIGNALS--------------------------------
 signal MUX2x1_WB_OUT:std_logic_vector(31 downto 0);
-signal OUTPUT_PORT_FINAL:std_logic_vector(31 downto 0); 
 signal ENABLE_OUTPUT_PORT: std_logic;
 ------------------Control Unit Signals-------------------------
 signal DAlUF : std_logic_vector(3 DOWNTO 0);
@@ -463,7 +462,7 @@ MUX2x1_FROM_MEM_WB_BUFFER: mux_2x1 generic map(32) port map(A=>READ_DATA_WB,B=>A
 
 WriteData1<=MUX2x1_WB_OUT;
 
-OUTPUT_PORT: G_Register generic map(32) port map(D=>ALU_result_WB,Q=>OUTPUT_PORT_FINAL,clk=>clk,rst=>reset,enable=>opregMemB_WB);
+OUTPUT_PORT: G_Register generic map(32) port map(D=>ALU_result_WB,Q=>output,clk=>clk,rst=>reset,enable=>opregMemB_WB);
 
 -----------------------------------------------
 
