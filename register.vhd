@@ -4,7 +4,7 @@ USE IEEE.std_logic_1164.all;
 Entity reg IS 
 port(
   D1,D2:IN std_logic_vector(31 downto 0);
-  Q:OUT std_logic_vector(31 downto 0);
+  Q:OUT std_logic_vector(31 downto 0):=(others =>'0');
   clk,rst,enable1,enable2:IN std_Logic
 );
 END ENTITY;
