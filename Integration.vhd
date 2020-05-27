@@ -299,6 +299,7 @@ inputport<=foutbuffer(31 downto 0);
 WriteReg1<= RdstMEM when (WriteBack2_MEM='0') ELSE  Rsrc2MEM ;
 -----------------------------------------------
 -------------------Extend MUX------------------
+imdtSelector<=DImmSel;
 imdtExtend<="0000000000000000"&imdtValue;
 EAExtend <= "000000000000000000000"&EAadress;
 imdtValueSelected<= imdtExtend when imdtSelector="00"
