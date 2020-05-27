@@ -382,7 +382,7 @@ AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000000";
 -----------------------------------------------
 
 -----------------------Execute-----------------
-FlagEnable <= (FlagED AND BranchatMem) OR AndMem;
+FlagEnable <= ((not NEW_BRANCH_atMEM) AND BranchatMem) OR AndMem;
 FlagsE <= FlagsO when AndMem='0'
 else FlagsMem when AndMem='1';
 FlagReg : G_Register generic map(3) port map(FlagsE,Flagsin,clk,reset,FlagEnable);
