@@ -392,7 +392,7 @@ else Flagsin(2) when FlagSelec = "10";
 Aluin1 <= Rsrc1D;
 Aluin2 <= Rscr2D when ALUCont ='0'
 else Immval when ALUCont='1';
-ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),Flagso(2),Flagso(1),Flagso(0),ALURes);
+ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),FlagsO(2),FlagsO(1),FlagsO(0),ALURes);
 AdderEX : NADDER generic map(11) port map(PCE,"00000000001",'0',trashcan,PCEX);
 CounterConE <= CounterConDB when BranchatMem='0'
 else "00" when BranchatMem ='1';
