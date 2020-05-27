@@ -342,7 +342,7 @@ MUX_4X1_to_Counter: mux_4x1 generic map(2) port map(A=>MUX_4X1_to_Counter_LOAD0,
 
 Counter_multi_cycle: down_counter port map(clock=>clk,reset=>reset,enable=>new_counter_enable,load_data=>MUX_4X1_to_Counter_OUT,output=>counter_output);
 
-multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_control,WSel=>multi_cycle_write_select,BatM=>NEW_BRANCH_atMEM,RM=>mem_read_control,WM=>mem_write_control,Stack=>stack_enable,NRM=>new_read_mem,NWM=>new_write_mem,NStack=>new_stack_enable,cenable=>new_counter_enable,NWSel=>new_write_select_toMux4x1);
+multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_control,WSel=>multi_cycle_write_select,BatM=>branch_atMEM,RM=>mem_read_control,WM=>mem_write_control,Stack=>stack_enable,NRM=>new_read_mem,NWM=>new_write_mem,NStack=>new_stack_enable,cenable=>new_counter_enable,NBatM=>NEW_BRANCH_atMEM,NWSel=>new_write_select_toMux4x1);
 
 stall_memory<=counter_output(1) or counter_output(0);
 WIRE_MEM_TO_EXEC<=counter_output(0) and counter_control(0);
