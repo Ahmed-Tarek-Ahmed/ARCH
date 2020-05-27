@@ -72,8 +72,8 @@ PORT(
     ReadReg1,ReadReg2,WriteReg1,WriteReg2 : IN std_logic_vector (2 downto 0);
     ReadData1,ReadData2 : OUT std_logic_vector (31 downto 0);
     WriteData1,WriteData2 : IN std_logic_vector (31 downto 0);
-    WriteBack1,WriteBack2,CLK,RST: IN std_logic
-
+    WriteBack1,WriteBack2,CLK,RST: IN std_logic;
+	r0,r1,r2,r3,r4,r5,r6,r7 : OUT std_logic_vector (31 downto 0)
 );
 END component;
 component G_Register IS
@@ -98,6 +98,7 @@ port(A1,B1 :IN std_logic_vector (n-1 downto 0);
 	Cout1:OUT std_Logic;
 	sum: OUT std_logic_vector(n-1 downto 0));
 end component;
+
 -------------------4x1 mux-----------------------
 component mux_4x1 is
 GENERIC (n : integer := 32);
@@ -125,6 +126,7 @@ component ram is
 		datain  : IN  std_logic_vector(31 DOWNTO 0);
 		dataout : OUT std_logic_vector(31 DOWNTO 0));
 END component;
+signal r0,r1,r2,r3,r4,r5,r6,r7 :  std_logic_vector (31 downto 0);
 --------------------Fetch-----------------------
 signal PcE1,PcM,pcm01,pcadd,npc,FPC,PCE: std_logic_vector(10 downto 0);
 signal BatE,BatM,pcen,flag,Fflush:std_logic;
@@ -188,7 +190,7 @@ signal NADDER_output: std_logic_vector(10 downto 0);
 signal SP_OUTPUT: std_logic_vector(10 downto 0);
 
 signal MUX_2x1_beforeadd_out: std_logic_vector(10 downto 0);
-signal MUX_2x1_to_mem_out: std_logic_vector(1 downto 0); 
+signal MUX_2x1_to_mem_out: std_logic_vector(10 downto 0); 
 signal MUX_4X1_to_Counter_LOAD0:std_logic_vector(1 downto 0);
 signal MUX_4X1_to_Counter_LOAD2:std_logic_vector(1 downto 0);
 signal MUX_4X1_to_Counter_LOAD3:std_logic_vector(1 downto 0);
@@ -264,7 +266,7 @@ ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol
 pcmux1:pcmux port map(batm,bate,reset,pce1,pcm,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,FPC,clk,reset,pcen);
 instmem1:instmem port map(Fpc,inst);
-RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset);
+RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset,r0,r1,r2,r3,r4,r5,r6,r7);
 BatE<=(flag and branchE(1)) or branchE(0);
 pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
 pcinc<= "00000000001" when inst(26)='1' else
@@ -304,7 +306,7 @@ PC_OUT_EXTEND<="000000000000000000000" & PC_OUT;
 
 MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT_EXTEND,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>new_write_select_toMux4x1(1),S0=>new_write_select_toMux4x1(0),Z=>WRITE_DATA);
 
-MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_beforeadd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);
+MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_beforeadd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);--
 
 MUX_4X1_to_Address: mux_4x1 generic map(11) port map(A=>MUX_2x1_to_mem_out,B=>ADD_0,C=>ADD_2,D=>ADD_0,S1=>MSB_SELEC_MUX4x1_Address,S0=>reset,Z=>MEMORY_ADDRESS); ----SELECTION LINES NEED TO BE REVIEWED
 
@@ -317,9 +319,9 @@ STACK_POINTER: G_Register generic map(11) port map(D=>NADDER_output,Q=>SP_OUTPUT
 
 MUX_2x1_beforeadd: mux_2x1 generic map(11) port map(A=>ADD_2,B=>ADD_neg2,S0=>inc_dec,Z=>MUX_2x1_beforeadd_out);
 
-SP_ADDER: NADDER generic map(11) port map(A1=>SP_OUTPUT,B1=>MUX_2x1_beforeadd_out,cin1=>cin_SP,cout1=>cout_SP,sum=>NADDER_output);
+SP_ADDER: NADDER generic map(11) port map(A1=>SP_OUTPUT,B1=>MUX_2x1_beforeadd_out,cin1=>cin_SP,cout1=>cout_SP,sum=>NADDER_output);--
 
-MUX_2x1_afteradd: mux_2x1 generic map(11) port map(A=>NADDER_output,B=>SP_OUTPUT,S0=>inc_dec,Z=>MUX_2x1_beforeadd_out);
+MUX_2x1_afteradd: mux_2x1 generic map(11) port map(A=>NADDER_output,B=>SP_OUTPUT,S0=>inc_dec,Z=>MUX_2x1_beforeadd_out);--
 ------------MEMORY_MAPPING_(MULTI_CYCLE _CIRCUIT)------------------
 MUX_4X1_to_Counter_LOAD0<="00";
 MUX_4X1_to_Counter_LOAD2<="10";

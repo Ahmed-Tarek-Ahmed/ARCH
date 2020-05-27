@@ -11,14 +11,9 @@ GENERIC (n : integer := 32);
 end mux_2x1;
  
 architecture mux_2x1_arch of mux_2x1 is
-begin
-process (A,B,S0) is
-begin
-  if (S0 ='0') then
-      Z <= A;
+begin 
+      Z <= A when S0='0'
   else
-      Z <= B;
-  end if;
+      B;
  
-end process;
 end mux_2x1_arch;

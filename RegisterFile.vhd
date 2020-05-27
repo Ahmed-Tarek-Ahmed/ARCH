@@ -4,10 +4,10 @@ use ieee.std_logic_1164.all;
 Entity RegisterFile IS
 PORT(
     ReadReg1,ReadReg2,WriteReg1,WriteReg2 : IN std_logic_vector (2 downto 0);
-    ReadData1,ReadData2 : OUT std_logic_vector (31 downto 0);
+    ReadData1,ReadData2: OUT std_logic_vector (31 downto 0);
     WriteData1,WriteData2 : IN std_logic_vector (31 downto 0);
-    WriteBack1,WriteBack2,CLK,RST: IN std_logic
-
+    WriteBack1,WriteBack2,CLK,RST: IN std_logic;
+	r0,r1,r2,r3,r4,r5,r6,r7 : OUT std_logic_vector (31 downto 0)
 );
 END ENTITY;
 
@@ -51,6 +51,8 @@ BEGIN
   Reg5 : reg  PORT MAP (WriteData1,WriteData2,q5,CLK,RST,write1(5),write2(5));
   Reg6 : reg  PORT MAP (WriteData1,WriteData2,q6,CLK,RST,write1(6),write2(6));
   Reg7 : reg  PORT MAP (WriteData1,WriteData2,q7,CLK,RST,write1(7),write2(7));  
+
+r0<=q0; r1<=q1 ;r2<=q2;r3<=q3;r4<=q4;r5<=q5;r6<=q6;r7<=q7;
 --------------------Buffer1---------------------------
 ReadData1 <= q0 when read1(0)='1'
 	else (others=>'Z');

@@ -10,7 +10,7 @@ END my_adder;
 
 ARCHITECTURE a_my_adder OF my_adder IS
 	BEGIN
-s <= a XOR b XOR Cin;
+s <= (a XOR b) XOR Cin;
 cout <= (a AND b) OR (cin AND (a XOR b));
 END a_my_adder;
 
@@ -32,9 +32,11 @@ PORT (a,b,Cin : IN  std_logic;
  END COMPONENT ;
 signal temp :std_logic_vector(n-1 downto 0);
 begin 
-temp(0) <= Cin1;
-loop1: FOR i IN 0 TO n-2 GENERATE
-fx: my_adder PORT MAP(A1(i),B1(i),temp(i),sum(i),temp(i+1));
+f0:my_adder port map(A1(0),B1(0),Cin1,sum(0),temp(0));
+loop1: FOR i IN 1 TO n-1 GENERATE
+fx: my_adder PORT MAP(A1(i),B1(i),temp(i-1),sum(i),temp(i));
 END GENERATE;
-f31: my_adder PORT MAP(A1(n-1),B1(n-1),temp(n-1),sum(n-1),Cout1);
+Cout1<=temp(n-1);
 end ARCHITECTURE;
+
+
