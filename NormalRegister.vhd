@@ -5,7 +5,7 @@ Entity G_Register IS
  Generic (n:integer:=32);
 port(
   D:IN std_logic_vector(n-1 downto 0);
-  Q:OUT std_logic_vector(n-1 downto 0);
+  Q:OUT std_logic_vector(n-1 downto 0):=(others =>'0');
   clk,rst,enable:IN std_Logic
 );
 END ENTITY;
