@@ -268,6 +268,7 @@ signal OUTbuffer_D : std_logic_vector(137 downto 0);
 -----------------------------------------------
 begin
 ------------------fetch------------------------------------
+pcen<='1';
 pcm01<=READ_DATA(10 downto 0);
 pce1<= Rsrc1D(10 downto 0);
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
@@ -277,7 +278,7 @@ instmem1:instmem port map(Fpc,inst);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset,r0,r1,r2,r3,r4,r5,r6,r7);
 BatE<=(flag and branchE(1)) or branchE(0);
 pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
-pcinc<= "00000000001" when inst(26)='1' else
+pcinc<= "00000000001" when inst(26)='0' else
 	"00000000010";
 opcodeF <= inst(31 downto 26) when fflush='0'
 	else "000000";
@@ -367,6 +368,7 @@ ENABLE_BUFFER_MEM_TO_WB<='1';
 MEM_WB_BUFFER: G_Register generic map(109) port map(D=>BUS_TO_MEM_WB_BUFFER_IN,Q=>BUS_TO_MEM_WB_BUFFER_OUT,clk=>clk,rst=>reset,enable=>ENABLE_BUFFER_MEM_TO_WB);
 
 ------------------Control Unit MUX-------------
+OrOut<= BatE or NEW_BRANCH_atMEM;
 BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&Dstacken&Dstackcont&DMWsel&DAlUF&DIMDTRSRC&DFlgen&Dflgsel;
 AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000000";
 -----------------------------------------------
@@ -382,7 +384,7 @@ else Flagsin(2) when FlagSelec = "10";
 Aluin1 <= Rsrc1D;
 Aluin2 <= Rscr2D when ALUCont ='0'
 else Immval when ALUCont='1';
-ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),FlagsE(2),FlagsE(1),FlagsE(0),ALURes);
+ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),Flagso(2),Flagso(1),Flagso(0),ALURes);
 AdderEX : NADDER generic map(11) port map(PCE,"00000000001",'0',trashcan,PCEX);
 CounterConE <= CounterConDB when BranchatMem='0'
 else "00" when BranchatMem ='1';
