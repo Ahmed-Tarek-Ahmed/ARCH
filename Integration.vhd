@@ -143,8 +143,8 @@ component ram is
 END component;
 signal r0,r1,r2,r3,r4,r5,r6,r7 :  std_logic_vector (31 downto 0);
 --------------------Fetch-----------------------
-signal PcE1,PcM,pcm01,pcadd,npc,FPC,PCE: std_logic_vector(10 downto 0);
-signal BatE,BatM,pcen,flag,Fflush:std_logic;
+signal PcE1,pcm01,pcadd,npc,FPC,PCE: std_logic_vector(10 downto 0);
+signal BatE,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
 signal opcodeF:std_logic_vector(5 downto 0);
 signal ONE:std_logic:='1';
@@ -204,7 +204,7 @@ signal cout_SP: std_logic;
 signal NADDER_output: std_logic_vector(10 downto 0);
 signal SP_OUTPUT: std_logic_vector(10 downto 0);
 
-signal MUX_2x1_beforeadd_out: std_logic_vector(10 downto 0);
+signal MUX_2x1_beforeadd_out,MUX_2x1_afteradd_out: std_logic_vector(10 downto 0);
 signal MUX_2x1_to_mem_out: std_logic_vector(10 downto 0); 
 signal MUX_4X1_to_Counter_LOAD0:std_logic_vector(1 downto 0);
 signal MUX_4X1_to_Counter_LOAD2:std_logic_vector(1 downto 0);
@@ -280,7 +280,7 @@ pcen<='1';
 pcm01<=READ_DATA(10 downto 0);
 pce1<= Rsrc1D(10 downto 0);
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
-pcmux1:pcmux port map(batm,bate,reset,pce1,pcm,pcadd,pcm01,npc);
+pcmux1:pcmux port map(NEW_BRANCH_atMEM,bate,reset,pce1,pcm01,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,FPC,clk,zero,pcen);
 instmem1:instmem port map(Fpc,inst);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset,r0,r1,r2,r3,r4,r5,r6,r7);
@@ -324,7 +324,7 @@ PC_OUT_EXTEND<="000000000000000000000" & PC_OUT;
 
 MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT_EXTEND,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>new_write_select_toMux4x1(1),S0=>new_write_select_toMux4x1(0),Z=>WRITE_DATA);
 
-MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_beforeadd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);--
+MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_afteradd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);--
 
 MUX_4X1_to_Address: mux_4x1 generic map(11) port map(A=>MUX_2x1_to_mem_out,B=>ADD_0,C=>ADD_2,D=>ADD_0,S1=>MSB_SELEC_MUX4x1_Address,S0=>reset,Z=>MEMORY_ADDRESS); ----SELECTION LINES NEED TO BE REVIEWED
 
@@ -339,7 +339,7 @@ MUX_2x1_beforeadd: mux_2x1 generic map(11) port map(A=>ADD_2,B=>ADD_neg2,S0=>inc
 
 SP_ADDER: NADDER generic map(11) port map(A1=>SP_OUTPUT,B1=>MUX_2x1_beforeadd_out,cin1=>cin_SP,cout1=>cout_SP,sum=>NADDER_output);--
 
-MUX_2x1_afteradd: mux_2x1 generic map(11) port map(A=>NADDER_output,B=>SP_OUTPUT,S0=>inc_dec,Z=>MUX_2x1_beforeadd_out);--
+MUX_2x1_afteradd: mux_2x1 generic map(11) port map(A=>NADDER_output,B=>SP_OUTPUT,S0=>inc_dec,Z=>MUX_2x1_afteradd_out);--
 ------------MEMORY_MAPPING_(MULTI_CYCLE _CIRCUIT)------------------
 MUX_4X1_to_Counter_LOAD0<="00";
 MUX_4X1_to_Counter_LOAD2<="10";
@@ -383,7 +383,7 @@ AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000000";
 -----------------------------------------------
 
 -----------------------Execute-----------------
-FlagEnable <= (FlagED AND BranchatMem) OR AndMem;
+FlagEnable <= (FlagED AND (not BranchatMem)) OR AndMem;
 FlagsE <= FlagsO when AndMem='0'
 else FlagsMem when AndMem='1';
 FlagReg : G_Register generic map(3) port map(FlagsE,Flagsin,clk,reset,FlagEnable);
@@ -410,25 +410,29 @@ else "000" when BranchatMem ='1';
 Rsc1E  <= Rsc1DB;
 Rsc2E <= Rsc2DB;
 RdstE <= RdstDB;
+
 EXBufferin <= CounterConE & BrnchMemE & OpRegEnE & MEME & WBE & Flagsin & ALURes & ALuin1 & PCEX & RdstE & ALuin2 & Rsc2E & Rsc1E;
+
 EXecBuffer : G_Register1 generic map (131) port map (EXBufferin,EXBufferout,clk,reset,ONE);
-ALU_result <= EXBufferout(46 downto 15);
-RSRC1_data <= EXBufferout(78 downto 47);
-PC_OUT <= EXBufferout(89 downto 79);
-FLAGS <= EXBufferout(14 downto 12);
-counter_control <= EXBufferout(1 downto 0);
-branch_atMEM <= EXBufferout(2);
-multi_cycle_write_select <= EXBufferout(4);
-mem_read_control <= EXBufferout(5);
-mem_write_control <= EXBufferout(6);
-stack_enable <= EXBufferout(7);
-inc_dec <= EXBufferout(8);
-Rsrc1MemB <= EXBufferout(130 downto 128);
-Rsrc2MemB <= EXBufferout(127 downto 125);
-RdstMem <= EXBufferout(92 downto 90);
-Rsrc2dataMemB <= EXBufferout(124 downto 93);
-WBMemB <= EXBufferout(11 downto 9);
-opregMemB <= EXBufferout(3);
+counter_control <= EXBufferout(130 downto 129);
+branch_atMEM <= EXBufferout(128);
+opregMemB <= EXBufferout(127);
+mem_read_control <= EXBufferout(126);
+mem_write_control <= EXBufferout(125);
+stack_enable <= EXBufferout(124);
+inc_dec <= EXBufferout(123);
+multi_cycle_write_select <= EXBufferout(122);
+WBMemB <= EXBufferout(121 downto 119);
+FLAGS <= EXBufferout(118 downto 116);
+ALU_result <= EXBufferout(115 downto 84);
+RSRC1_data <= EXBufferout(83 downto 52);
+PC_OUT <= EXBufferout(51 downto 41);
+RdstMemB <= EXBufferout(40 downto 38);
+Rsrc2dataMemB <= EXBufferout(37 downto 6);
+Rsrc2MemB <= EXBufferout(5 downto 3);
+Rsrc1MemB <= EXBufferout(2 downto 0);
+
+
 -----------------------------------------------
 
 ------------------ID/EXE Buffer----------------
@@ -442,7 +446,7 @@ WBDB<=OUTbuffer_D(131 downto 129);
 MEMDB<=OUTbuffer_D(128 downto 124);
 ALUCON<=OUTbuffer_D(123 downto 120);
 AlUCONT<=OUTbuffer_D(119);
-FlagEnable<=OUTbuffer_D(118);
+FlagEd<=OUTbuffer_D(118);
 FlagSelec<=OUTbuffer_D(117 downto 116);
 PCE<=OUTbuffer_D(115 downto 105);
 Rsrc1D<=OUTbuffer_D(104 downto 73);
@@ -470,7 +474,7 @@ WriteReg2<=Rsrc1MemB_WB;
 WriteBack2_MEM<=BUS_TO_MEM_WB_BUFFER_OUT(107);
 WriteBack1_MEM<=BUS_TO_MEM_WB_BUFFER_OUT(106);
 ---------------WB_STAGE_MAPPING------------------------ 
-MUX2x1_FROM_MEM_WB_BUFFER: mux_2x1 generic map(32) port map(A=>READ_DATA_WB,B=>ALU_result_WB,S0=>WBMemB_WB(2),Z=>MUX2x1_WB_OUT);
+MUX2x1_FROM_MEM_WB_BUFFER: mux_2x1 generic map(32) port map(A=>ALU_result_WB,B=>READ_DATA_WB,S0=>WBMemB_WB(2),Z=>MUX2x1_WB_OUT);
 
 WriteData1<=MUX2x1_WB_OUT;
 

@@ -13,5 +13,7 @@ ARCHITECTURE instmem1 OF instmem IS
 	TYPE ram_type IS ARRAY(0 TO 2047) OF std_logic_vector(15 DOWNTO 0);
 	SIGNAL ram : ram_type ;
 BEGIN
-	dataout <= ram(to_integer(unsigned(address))) & ram(to_integer(unsigned(address))+1);
+	dataout <=   ram(to_integer(unsigned(address))) & ram(0) when address="11111111111"
+			else
+		ram(to_integer(unsigned(address))) & ram(to_integer(unsigned(address))+1);
 END instmem1;

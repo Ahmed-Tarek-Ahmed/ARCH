@@ -26,5 +26,7 @@ ARCHITECTURE syncrama OF ram IS
 					END IF;
 				END IF;
 		END PROCESS;
-		dataout <= ram(to_integer(unsigned(address))+1) & ram(to_integer(unsigned(address)));
+		dataout <= ram(0) & ram(to_integer(unsigned(address)))  when address="11111111111"
+			else
+		ram(to_integer(unsigned(address))+1) & ram(to_integer(unsigned(address)));
 END syncrama;
