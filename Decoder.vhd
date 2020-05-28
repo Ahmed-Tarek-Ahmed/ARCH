@@ -32,6 +32,8 @@ PROCESS(enable,Sel)
     when others =>
     Decoderout<="10000000";
     END CASE;
+    else
+	 Decoderout<="00000000"; 
     END IF;
 END PROCESS;
 END Architecture;

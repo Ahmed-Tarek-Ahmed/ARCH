@@ -20,13 +20,9 @@ begin
 ELSIF falling_edge(clk) THEN
   if(enable1='1') then   
   Q<=D1;
-END IF;
-  if(enable2='1') then
+ELSIF (enable2='1') then
   Q<=D2;
 End IF;
-  if(enable1='1' and enable2='1') then
-  Q<=D1;
-END IF;
-END IF;
+end if;
 END PROCESS;
 END Architecture;

@@ -143,8 +143,8 @@ component ram is
 END component;
 signal r0,r1,r2,r3,r4,r5,r6,r7 :  std_logic_vector (31 downto 0);
 --------------------Fetch-----------------------
-signal PcE1,PcM,pcm01,pcadd,npc,FPC,PCE: std_logic_vector(10 downto 0);
-signal BatE,BatM,pcen,flag,Fflush:std_logic;
+signal PcE1,pcm01,pcadd,npc,FPC,PCE: std_logic_vector(10 downto 0);
+signal BatE,pcen,flag,Fflush:std_logic;
 signal zero:std_logic:='0';
 signal opcodeF:std_logic_vector(5 downto 0);
 signal ONE:std_logic:='1';
@@ -279,7 +279,7 @@ pcen<='1';
 pcm01<=READ_DATA(10 downto 0);
 pce1<= Rsrc1D(10 downto 0);
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
-pcmux1:pcmux port map(batm,bate,reset,pce1,pcm,pcadd,pcm01,npc);
+pcmux1:pcmux port map(NEW_BRANCH_atMEM,bate,reset,pce1,pcm01,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,FPC,clk,zero,pcen);
 instmem1:instmem port map(Fpc,inst);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset,r0,r1,r2,r3,r4,r5,r6,r7);
@@ -424,7 +424,7 @@ FLAGS <= EXBufferout(118 downto 116);
 ALU_result <= EXBufferout(115 downto 84);
 RSRC1_data <= EXBufferout(83 downto 52);
 PC_OUT <= EXBufferout(51 downto 41);
-RdstMem <= EXBufferout(40 downto 38);
+RdstMemB <= EXBufferout(40 downto 38);
 Rsrc2dataMemB <= EXBufferout(37 downto 6);
 Rsrc2MemB <= EXBufferout(5 downto 3);
 Rsrc1MemB <= EXBufferout(2 downto 0);
