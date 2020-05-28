@@ -268,6 +268,7 @@ signal MEMDB,MEME : std_logic_vector(4 downto 0);
 signal WBDB,WBE : std_logic_vector(2 downto 0);
 signal trashcan : std_logic;
 signal Rsc1DB,Rsc1E,Rsc2DB,Rsc2E,RdstDB,RdstE : std_logic_vector(2 downto 0);
+signal newnew : std_logic_vector(10 downto 0);
 signal EXBufferin,EXBufferout : std_logic_vector(130 downto 0);
 ------------------ID/EXE Buffer signal---------
 signal INbuffer_D: std_logic_vector(137 downto 0);
@@ -393,7 +394,9 @@ Aluin1 <= Rsrc1D;
 Aluin2 <= Rscr2D when ALUCont ='0'
 else Immval when ALUCont='1';
 ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),Flagso(2),Flagso(1),Flagso(0),ALURes);
-AdderEX : NADDER generic map(11) port map(PCE,"00000000001",'0',trashcan,PCEX);
+newnew = "0000000000" when 
+else "00000000001";
+AdderEX : NADDER generic map(11) port map(PCE,newnew,'0',trashcan,PCEX);
 CounterConE <= CounterConDB when BranchatMem='0'
 else "00" when BranchatMem ='1';
 BrnchMemE  <= BrnchMemDB when BranchatMem='0'
