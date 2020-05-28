@@ -382,7 +382,7 @@ AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000000";
 -----------------------------------------------
 
 -----------------------Execute-----------------
-FlagEnable <= (FlagED AND BranchatMem) OR AndMem;
+FlagEnable <= (FlagED AND (not BranchatMem)) OR AndMem;
 FlagsE <= FlagsO when AndMem='0'
 else FlagsMem when AndMem='1';
 FlagReg : G_Register generic map(3) port map(FlagsE,Flagsin,clk,reset,FlagEnable);
@@ -443,7 +443,7 @@ WBDB<=OUTbuffer_D(131 downto 129);
 MEMDB<=OUTbuffer_D(128 downto 124);
 ALUCON<=OUTbuffer_D(123 downto 120);
 AlUCONT<=OUTbuffer_D(119);
-FlagEnable<=OUTbuffer_D(118);
+FlagEd<=OUTbuffer_D(118);
 FlagSelec<=OUTbuffer_D(117 downto 116);
 PCE<=OUTbuffer_D(115 downto 105);
 Rsrc1D<=OUTbuffer_D(104 downto 73);
