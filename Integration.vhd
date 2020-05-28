@@ -394,7 +394,7 @@ Aluin1 <= Rsrc1D;
 Aluin2 <= Rscr2D when ALUCont ='0'
 else Immval when ALUCont='1';
 ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),Flagso(2),Flagso(1),Flagso(0),ALURes);
-newnew = "0000000000" when 
+newnew <= "00000000000" when CounterConDB(1)='0'
 else "00000000001";
 AdderEX : NADDER generic map(11) port map(PCE,newnew,'0',trashcan,PCEX);
 CounterConE <= CounterConDB when BranchatMem='0'
