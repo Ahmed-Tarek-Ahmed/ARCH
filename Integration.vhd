@@ -204,7 +204,7 @@ signal cout_SP: std_logic;
 signal NADDER_output: std_logic_vector(10 downto 0);
 signal SP_OUTPUT: std_logic_vector(10 downto 0);
 
-signal MUX_2x1_beforeadd_out: std_logic_vector(10 downto 0);
+signal MUX_2x1_beforeadd_out,MUX_2x1_afteradd_out: std_logic_vector(10 downto 0);
 signal MUX_2x1_to_mem_out: std_logic_vector(10 downto 0); 
 signal MUX_4X1_to_Counter_LOAD0:std_logic_vector(1 downto 0);
 signal MUX_4X1_to_Counter_LOAD2:std_logic_vector(1 downto 0);
@@ -323,7 +323,7 @@ PC_OUT_EXTEND<="000000000000000000000" & PC_OUT;
 
 MUX_4X1_to_WriteData: mux_4x1 generic map(32) port map(A=>RSRC1_data,B=>PC_OUT_EXTEND,C=>FLAGS_EXTENDED,D=>FLAGS_EXTENDED,S1=>new_write_select_toMux4x1(1),S0=>new_write_select_toMux4x1(0),Z=>WRITE_DATA);
 
-MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_beforeadd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);--
+MUX_2x1_to_mem: mux_2x1 generic map(11) port map(A=>ALU_result_cut,B=>MUX_2x1_afteradd_out,S0=>new_stack_enable,Z=>MUX_2x1_to_mem_out);--
 
 MUX_4X1_to_Address: mux_4x1 generic map(11) port map(A=>MUX_2x1_to_mem_out,B=>ADD_0,C=>ADD_2,D=>ADD_0,S1=>MSB_SELEC_MUX4x1_Address,S0=>reset,Z=>MEMORY_ADDRESS); ----SELECTION LINES NEED TO BE REVIEWED
 
@@ -338,7 +338,7 @@ MUX_2x1_beforeadd: mux_2x1 generic map(11) port map(A=>ADD_2,B=>ADD_neg2,S0=>inc
 
 SP_ADDER: NADDER generic map(11) port map(A1=>SP_OUTPUT,B1=>MUX_2x1_beforeadd_out,cin1=>cin_SP,cout1=>cout_SP,sum=>NADDER_output);--
 
-MUX_2x1_afteradd: mux_2x1 generic map(11) port map(A=>NADDER_output,B=>SP_OUTPUT,S0=>inc_dec,Z=>MUX_2x1_beforeadd_out);--
+MUX_2x1_afteradd: mux_2x1 generic map(11) port map(A=>NADDER_output,B=>SP_OUTPUT,S0=>inc_dec,Z=>MUX_2x1_afteradd_out);--
 ------------MEMORY_MAPPING_(MULTI_CYCLE _CIRCUIT)------------------
 MUX_4X1_to_Counter_LOAD0<="00";
 MUX_4X1_to_Counter_LOAD2<="10";
