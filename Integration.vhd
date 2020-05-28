@@ -353,7 +353,7 @@ Counter_multi_cycle: down_counter port map(clock=>clk,reset=>reset,enable=>new_c
 
 multi_cycle_control: MultCyc port map(C=>counter_output,CControl=>counter_control,WSel=>multi_cycle_write_select,BatM=>branch_atMEM,RM=>mem_read_control,WM=>mem_write_control,Stack=>stack_enable,NRM=>new_read_mem,NWM=>new_write_mem,NStack=>new_stack_enable,cenable=>new_counter_enable,NBatM=>NEW_BRANCH_atMEM,NWSel=>new_write_select_toMux4x1);
 
-stall_memory<=counter_output(1) or counter_output(0);
+stall_memory<=not counter_output(1) ;
 WIRE_MEM_TO_EXEC<=counter_output(0) and counter_control(0);
 
 AndMem<=WIRE_MEM_TO_EXEC;
@@ -394,7 +394,7 @@ Aluin1 <= Rsrc1D;
 Aluin2 <= Rscr2D when ALUCont ='0'
 else Immval when ALUCont='1';
 ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),Flagso(2),Flagso(1),Flagso(0),ALURes);
-newnew <= "00000000000" when CounterConDB(1)='0'
+newnew <= "00000000000" when CounterConDB(1)='1'
 else "00000000001";
 AdderEX : NADDER generic map(11) port map(PCE,newnew,'0',trashcan,PCEX);
 CounterConE <= CounterConDB when BranchatMem='0'
@@ -413,7 +413,7 @@ RdstE <= RdstDB;
 
 EXBufferin <= CounterConE & BrnchMemE & OpRegEnE & MEME & WBE & Flagsin & ALURes & ALuin1 & PCEX & RdstE & ALuin2 & Rsc2E & Rsc1E;
 
-EXecBuffer : G_Register1 generic map (131) port map (EXBufferin,EXBufferout,clk,reset,ONE);
+EXecBuffer : G_Register1 generic map (131) port map (EXBufferin,EXBufferout,clk,reset,stall_memory);
 counter_control <= EXBufferout(130 downto 129);
 branch_atMEM <= EXBufferout(128);
 opregMemB <= EXBufferout(127);
