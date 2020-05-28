@@ -62,13 +62,13 @@ ReadData1 <= q2 when read1(2)='1'
 	else (others=>'Z');
 ReadData1 <= q3 when read1(3)='1'
 	else (others=>'Z');
-ReadData1 <= q3 when read1(4)='1'
+ReadData1 <= q4 when read1(4)='1'
 	else (others=>'Z');
-ReadData1 <= q3 when read1(5)='1'
+ReadData1 <= q5 when read1(5)='1'
 	else (others=>'Z');
-ReadData1 <= q3 when read1(6)='1'
+ReadData1 <= q6 when read1(6)='1'
 	else (others=>'Z');
-ReadData1 <= q3 when read1(7)='1'
+ReadData1 <= q7 when read1(7)='1'
 	else (others=>'Z');
 -------------------------------------------------------
 --------------------Buffer2----------------------------
@@ -80,13 +80,13 @@ ReadData2 <= q2 when read2(2)='1'
 	else (others=>'Z');
 ReadData2 <= q3 when read2(3)='1'
 	else (others=>'Z');
-ReadData2 <= q3 when read2(4)='1'
+ReadData2 <= q4 when read2(4)='1'
 	else (others=>'Z');
-ReadData2 <= q3 when read2(5)='1'
+ReadData2 <= q5 when read2(5)='1'
 	else (others=>'Z');
-ReadData2 <= q3 when read2(6)='1'
+ReadData2 <= q6 when read2(6)='1'
 	else (others=>'Z');
-ReadData2 <= q3 when read2(7)='1'
+ReadData2 <= q7 when read2(7)='1'
 	else (others=>'Z');	  
 --------------------------------------------------------  
 END ARCHITECTURE;

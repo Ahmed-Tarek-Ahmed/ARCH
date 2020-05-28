@@ -18,7 +18,7 @@ begin
     process (clock, reset,enable) begin
         if reset='1' then
             count <= (others => '0');
-        elsif falling_edge(clock) then
+        elsif rising_edge(clock) then
             if count /="00" then
                 count <= count - 1;
             end if;
