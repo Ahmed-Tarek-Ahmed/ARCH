@@ -26,3 +26,10 @@ add wave -position insertpoint  \
 sim:/processor/inst
 add wave -position insertpoint  \
 sim:/processor/npc
+mem load -filltype value -filldata 0000100000000000 -fillradix symbolic /processor/instmem1/ram(0)
+mem load -filltype value -filldata {0000000000000000 } -fillradix symbolic /processor/MEMORY/ram(1)
+add wave -position insertpoint  \
+sim:/processor/FlagsE
+add wave -position insertpoint  \
+sim:/processor/Flagsin
+force -freeze sim:/processor/clk 1 0, 0 {200 ps} -r 400

@@ -475,7 +475,7 @@ WriteReg2<=Rsrc1MemB_WB;
 WriteBack2_MEM<=BUS_TO_MEM_WB_BUFFER_OUT(107);
 WriteBack1_MEM<=BUS_TO_MEM_WB_BUFFER_OUT(106);
 ---------------WB_STAGE_MAPPING------------------------ 
-MUX2x1_FROM_MEM_WB_BUFFER: mux_2x1 generic map(32) port map(A=>ALU_result_WB,B=>READ_DATA_WB,S0=>WBMemB_WB(2),Z=>MUX2x1_WB_OUT);
+MUX2x1_FROM_MEM_WB_BUFFER: mux_2x1 generic map(32) port map(A=>ALU_result_WB,B=>READ_DATA_WB,S0=>WBMemB_WB(0),Z=>MUX2x1_WB_OUT);
 
 WriteData1<=MUX2x1_WB_OUT;
 
