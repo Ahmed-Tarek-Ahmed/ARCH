@@ -508,7 +508,7 @@ forwarding:Forward port map (Rsc1DB,Rsc2DB,RdstMemB,RdstMemB_WB,RdstDB,WBMemB(2 
 -----------------------------------------------
 MEMR_WB<=mem_read_control and WBMemB(1);
 Hazard : HazardDetection port map (RdstMemB,Rsrc1,Rsrc2,MEMR_WB,Dcurrfun,DecodeFlush,PC_Stall,IfIdSignal);
-nDecodeFlush<=DecodeFlush;
-nPC_Stall<=PC_Stall;
-nIfIdSignal<=IfIdSignal;
+nDecodeFlush<=not(DecodeFlush);
+nPC_Stall<=not(PC_Stall);
+nIfIdSignal<=not(IfIdSignal);
 END Architecture;
