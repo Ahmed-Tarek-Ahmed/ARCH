@@ -274,19 +274,22 @@ signal EXBufferin,EXBufferout : std_logic_vector(130 downto 0);
 signal INbuffer_D: std_logic_vector(137 downto 0);
 signal OUTbuffer_D : std_logic_vector(137 downto 0);
 -----------------------------------------------
-----------------------FU-----------------------
+----------------------ForUnit-----------------------
 signal Rsrc1MUX,Rsrc2MUX :std_logic_vector (2 downto 0);
 signal fuMUX : std_logic_vector (31 downto 0);
 signal wbf:std_logic_vector (1 downto 0);
+-----------------------------------------------
+signal MEMR_WB : std_logic;
+signal DecodeFlush,PC_Stall,IfIdSignal,nDecodeFlush,nPC_Stall,nIfIdSignal : std_logic;
 -----------------------------------------------
 begin
 ------------------fetch------------------------------------
 pcen<='1';
 pcm01<=READ_DATA(10 downto 0);
-pce1<= Rsrc1D(10 downto 0);
+pce1<= Aluin1(10 downto 0);
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(NEW_BRANCH_atMEM,bate,reset,pce1,pcm01,pcadd,pcm01,npc);
-pcreg: G_register generic map(11) port map(npc,FPC,clk,zero,pcen);
+pcreg: G_register generic map(11) port map(npc,FPC,clk,zero,nPC_Stall);
 instmem1:instmem port map(Fpc,inst);
 RegFile : RegisterFile port map (Rsrc1,Rsrc2,WriteReg1,WriteReg2,ReadData1,ReadData2,WriteData1,WriteData2_MEM,WriteBack1_MEM,WriteBack2_MEM,clk,reset,r0,r1,r2,r3,r4,r5,r6,r7);
 BatE<=(flag and branchE(1)) or branchE(0);
@@ -297,7 +300,7 @@ opcodeF <= inst(31 downto 26) when fflush='0'
 	else "000000";
 fflush<=BatE or NEW_BRANCH_atMEM;
 Finbuffer<= opcodeF & inst(25 downto 0) & intr & fpc & input;
-fdbuffer:G_register1 generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,ONE);
+fdbuffer:G_register1 generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,nIfIdSignal);
 
 ---------------------------------------------------------------
 opcode<= foutbuffer(75 downto 70);
@@ -382,7 +385,7 @@ ENABLE_BUFFER_MEM_TO_WB<='1';
 MEM_WB_BUFFER: G_Register1 generic map(109) port map(D=>BUS_TO_MEM_WB_BUFFER_IN,Q=>BUS_TO_MEM_WB_BUFFER_OUT,clk=>clk,rst=>reset,enable=>ENABLE_BUFFER_MEM_TO_WB);
 
 ------------------Control Unit MUX-------------
-OrOut<= BatE or NEW_BRANCH_atMEM;
+OrOut<= BatE or NEW_BRANCH_atMEM or DecodeFlush;
 BeforeCUMUX<= DCcontrol&DBatM&DBatE&DOuten&DWB&DWBsel&DMR&DMW&Dstacken&Dstackcont&DMWsel&DAlUF&DIMDTRSRC&DFlgen&Dflgsel;
 AfterCUMUX<= BeforeCUMUX when (OrOUT='0') ELSE "0000000000000000000000";
 -----------------------------------------------
@@ -503,4 +506,9 @@ OUTPUT_PORT: G_Register generic map(32) port map(D=>ALU_result_WB,Q=>output,clk=
 -----------------------------------------------
 forwarding:Forward port map (Rsc1DB,Rsc2DB,RdstMemB,RdstMemB_WB,RdstDB,WBMemB(2 downto 1),wbf,opregMemB,opregMemB_WB,Rsrc1MUX,Rsrc2MUX);
 -----------------------------------------------
+MEMR_WB<=mem_read_control and WBMemB(1);
+Hazard : HazardDetection (RdstMemB,Rsrc1,Rsrc2,MEMR_WB,Dcurrfun,DecodeFlush,PC_Stall,IfIdSignal);
+nDecodeFlush<=DecodeFlush;
+nPC_Stall<=PC_Stall;
+nIfIdSignal<=IfIdSignal;
 END Architecture;
