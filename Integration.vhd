@@ -69,7 +69,7 @@ component MultCyc IS
 END component;
 component Forward IS
 Port(
-  Rsrc1,Rsrc2,RdstMem,RdstWB : IN std_logic_vector (2 downto 0);
+  Rsrc1,Rsrc2,RdstMem,RdstWB,Rdst: IN std_logic_vector (2 downto 0);
   WB_SMem,WB_SWB : IN std_logic_vector (1 downto 0);
   outMem,outWB: IN std_logic;
   Rsrc1MUX,Rsrc2MUX : OUT std_logic_vector (2 downto 0)
@@ -274,6 +274,11 @@ signal EXBufferin,EXBufferout : std_logic_vector(130 downto 0);
 signal INbuffer_D: std_logic_vector(137 downto 0);
 signal OUTbuffer_D : std_logic_vector(137 downto 0);
 -----------------------------------------------
+----------------------FU-----------------------
+signal Rsrc1MUX,Rsrc2MUX :std_logic_vector (2 downto 0);
+signal fuMUX : std_logic_vector (31 downto 0);
+signal wbf:std_logic_vector (1 downto 0);
+-----------------------------------------------
 begin
 ------------------fetch------------------------------------
 pcen<='1';
@@ -391,8 +396,21 @@ FlagReg : G_Register generic map(3) port map(FlagsE,Flagsin,clk,reset,FlagEnable
 Flag <= Flagsin(0) when FlagSelec = "00"
 else Flagsin(1) when FlagSelec = "01"
 else Flagsin(2) when FlagSelec = "10";
-Aluin1 <= Rsrc1D;
-Aluin2 <= Rscr2D when ALUCont ='0'
+-----------------------------------------
+Aluin1 <= Rsrc2dataMemB_WB when Rsrc1MUX="000"
+else  Rsrc1D when Rsrc1MUX="001"
+else  ALU_result when Rsrc1MUX="010"
+else MUX2x1_WB_OUT when  Rsrc1MUX="011"
+else Rsrc2dataMemB when  Rsrc1MUX="100";
+
+fuMUX <= Rsrc2dataMemB_WB when Rsrc2MUX="000"
+else  Rscr2D when Rsrc2MUX="001"
+else  ALU_result when Rsrc2MUX="010"
+else  MUX2x1_WB_OUT when  Rsrc2MUX="011"
+else  Rsrc2dataMemB when  Rsrc2MUX="100";   
+
+Aluin2 <= fuMUX when ALUCont ='0'
+-----------------------------------------
 else Immval when ALUCont='1';
 ALUMain : ALU port map(Aluin1,Aluin2,AluCon,Immval(5 downto 0),Flagsin(2),Flagsin(1),Flagsin(0),Flagso(2),Flagso(1),Flagso(0),ALURes);
 newnew <= "00000000000" when CounterConDB(1)='1'
@@ -474,6 +492,7 @@ Rsrc2MEM<=Rsrc2MemB_WB;
 WriteReg2<=Rsrc1MemB_WB;
 WriteBack2_MEM<=BUS_TO_MEM_WB_BUFFER_OUT(107);
 WriteBack1_MEM<=BUS_TO_MEM_WB_BUFFER_OUT(106);
+wbf<=WriteBack2_MEM&WriteBack1_MEM;
 ---------------WB_STAGE_MAPPING------------------------ 
 MUX2x1_FROM_MEM_WB_BUFFER: mux_2x1 generic map(32) port map(A=>ALU_result_WB,B=>READ_DATA_WB,S0=>WBMemB_WB(0),Z=>MUX2x1_WB_OUT);
 
@@ -482,5 +501,6 @@ WriteData1<=MUX2x1_WB_OUT;
 OUTPUT_PORT: G_Register generic map(32) port map(D=>ALU_result_WB,Q=>output,clk=>clk,rst=>reset,enable=>opregMemB_WB);
 
 -----------------------------------------------
-
+forwarding:Forward port map (Rsc1DB,Rsc2DB,RdstMemB,RdstMemB_WB,RdstDB,WBMemB(2 downto 1),wbf,opregMemB,opregMemB_WB,Rsrc1MUX,Rsrc2MUX);
+-----------------------------------------------
 END Architecture;
