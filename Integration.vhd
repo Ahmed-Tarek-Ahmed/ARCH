@@ -283,7 +283,7 @@ begin
 ------------------fetch------------------------------------
 pcen<='1';
 pcm01<=READ_DATA(10 downto 0);
-pce1<= Rsrc1D(10 downto 0);
+pce1<= Aluin1(10 downto 0);
 ControlUnit : Control port map (opCode,intrpt,DAlUF,Dcurrfun,DBatE,DWB,DCcontrol,DImmSel,Dflgsel,DBatM,DOuten,DMR,DMW,DMWsel,DWBsel,DIMDTRSRC,Dstacken,Dstackcont,DFlgen);
 pcmux1:pcmux port map(NEW_BRANCH_atMEM,bate,reset,pce1,pcm01,pcadd,pcm01,npc);
 pcreg: G_register generic map(11) port map(npc,FPC,clk,zero,pcen);
