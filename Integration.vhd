@@ -69,7 +69,7 @@ component MultCyc IS
 END component;
 component Forward IS
 Port(
-  Rsrc1,Rsrc2,RdstMem,RdstWB,Rdst: IN std_logic_vector (2 downto 0);
+  Rsrc1,Rsrc2,RdstMem,RdstWB: IN std_logic_vector (2 downto 0);
   WB_SMem,WB_SWB : IN std_logic_vector (1 downto 0);
   outMem,outWB: IN std_logic;
   Rsrc1MUX,Rsrc2MUX : OUT std_logic_vector (2 downto 0)
@@ -504,7 +504,7 @@ WriteData1<=MUX2x1_WB_OUT;
 OUTPUT_PORT: G_Register generic map(32) port map(D=>ALU_result_WB,Q=>output,clk=>clk,rst=>reset,enable=>opregMemB_WB);
 
 -----------------------------------------------
-forwarding:Forward port map (Rsc1DB,Rsc2DB,RdstMemB,RdstMemB_WB,RdstDB,WBMemB(2 downto 1),wbf,opregMemB,opregMemB_WB,Rsrc1MUX,Rsrc2MUX);
+forwarding:Forward port map (Rsc1DB,Rsc2DB,RdstMemB,RdstMemB_WB,WBMemB(2 downto 1),wbf,opregMemB,opregMemB_WB,Rsrc1MUX,Rsrc2MUX);
 -----------------------------------------------
 MEMR_WB<=WBDB(0)and WBDB(1);
 Hazard : HazardDetection port map (RdstDB,Rsrc1,Rsrc2,MEMR_WB,Dcurrfun,DecodeFlush,PC_Stall,IfIdSignal);

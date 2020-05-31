@@ -506,9 +506,9 @@ OUTPUT_PORT: G_Register generic map(32) port map(D=>ALU_result_WB,Q=>output,clk=
 -----------------------------------------------
 forwarding:Forward port map (Rsc1DB,Rsc2DB,RdstMemB,RdstMemB_WB,RdstDB,WBMemB(2 downto 1),wbf,opregMemB,opregMemB_WB,Rsrc1MUX,Rsrc2MUX);
 -----------------------------------------------
-MEMR_WB<=mem_read_control and WBMemB(1);
-Hazard : HazardDetection port map (RdstMemB,Rsrc1,Rsrc2,MEMR_WB,Dcurrfun,DecodeFlush,PC_Stall,IfIdSignal);
-nDecodeFlush<=DecodeFlush;
-nPC_Stall<=PC_Stall;
-nIfIdSignal<=IfIdSignal;
+MEMR_WB<=WBDB(0)and WBDB(1);
+Hazard : HazardDetection port map (RdstDB,Rsrc1,Rsrc2,MEMR_WB,Dcurrfun,DecodeFlush,PC_Stall,IfIdSignal);
+nDecodeFlush<=not(DecodeFlush);
+nPC_Stall<=not(PC_Stall);
+nIfIdSignal<=not(IfIdSignal);
 END Architecture;
