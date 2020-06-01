@@ -27,7 +27,7 @@ component G_Register1 IS
 port(
   D:IN std_logic_vector(n-1 downto 0);
   Q:OUT std_logic_vector(n-1 downto 0):=(others =>'0');
-  clk,rst,enable:IN std_Logic
+  clk,rst,enable,flush:IN std_Logic
 );
 END component;
 component HazardDetection is
@@ -144,7 +144,7 @@ END component;
 signal r0,r1,r2,r3,r4,r5,r6,r7 :  std_logic_vector (31 downto 0);
 --------------------Fetch-----------------------
 signal PcE1,pcm01,pcadd,npc,FPC,PCE: std_logic_vector(10 downto 0);
-signal BatE,pcen,flag,Fflush:std_logic;
+signal BatE,pcen,flag,Fflush,resetf:std_logic;
 signal zero:std_logic:='0';
 signal opcodeF:std_logic_vector(5 downto 0);
 signal ONE:std_logic:='1';
@@ -296,11 +296,10 @@ BatE<=(flag and branchE(1)) or branchE(0);
 pcADDER: NADDER generic map(11) port map(pcinc,fpc,zero,open,pcadd);
 pcinc<= "00000000001" when inst(26)='0' else
 	"00000000010";
-opcodeF <= inst(31 downto 26) when fflush='0'
-	else "000000";
+opcodeF <= inst(31 downto 26);
 fflush<=BatE or NEW_BRANCH_atMEM;
 Finbuffer<= opcodeF & inst(25 downto 0) & intr & fpc & input;
-fdbuffer:G_register1 generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,nIfIdSignal);
+fdbuffer:G_register1 generic map(76) port map(Finbuffer,Foutbuffer,clk,reset,nIfIdSignal,fflush);
 
 ---------------------------------------------------------------
 opcode<= foutbuffer(75 downto 70);
@@ -382,7 +381,7 @@ MEMORY: ram port map(clk=>clk,we=>new_write_mem,address=>MEMORY_ADDRESS,datain=>
 BUS_TO_MEM_WB_BUFFER_IN<=opregMemB & WBMemB & READ_DATA & ALU_RESULT & RdstMemB & Rsrc2dataMemB & Rsrc2MemB & Rsrc1MemB;
 ENABLE_BUFFER_MEM_TO_WB<='1';
 
-MEM_WB_BUFFER: G_Register1 generic map(109) port map(D=>BUS_TO_MEM_WB_BUFFER_IN,Q=>BUS_TO_MEM_WB_BUFFER_OUT,clk=>clk,rst=>reset,enable=>ENABLE_BUFFER_MEM_TO_WB);
+MEM_WB_BUFFER: G_Register1 generic map(109) port map(D=>BUS_TO_MEM_WB_BUFFER_IN,Q=>BUS_TO_MEM_WB_BUFFER_OUT,clk=>clk,rst=>reset,enable=>ENABLE_BUFFER_MEM_TO_WB,flush=>zero);
 
 ------------------Control Unit MUX-------------
 OrOut<= BatE or NEW_BRANCH_atMEM or DecodeFlush;
@@ -435,7 +434,7 @@ RdstE <= RdstDB;
 
 EXBufferin <= CounterConE & BrnchMemE & OpRegEnE & MEME & WBE & Flagsin & ALURes & ALuin1 & PCEX & RdstE & ALuin2 & Rsc2E & Rsc1E;
 
-EXecBuffer : G_Register1 generic map (131) port map (EXBufferin,EXBufferout,clk,reset,stall_memory);
+EXecBuffer : G_Register1 generic map (131) port map (EXBufferin,EXBufferout,clk,reset,stall_memory,zero);
 counter_control <= EXBufferout(130 downto 129);
 branch_atMEM <= EXBufferout(128);
 opregMemB <= EXBufferout(127);
@@ -459,7 +458,7 @@ Rsrc1MemB <= EXBufferout(2 downto 0);
 
 ------------------ID/EXE Buffer----------------
 INbuffer_D<=AfterCUMUX&PC&ReadData1&ReadData2&imdtValueSelected&Rdst&Rsrc2&Rsrc1;
-ID_EXE: G_register1 generic map (138) port map (INbuffer_D,OUTbuffer_D,clk,reset,ONE);
+ID_EXE: G_register1 generic map (138) port map (INbuffer_D,OUTbuffer_D,clk,reset,ONE,zero);
 CounterConDB<=OUTbuffer_D(137 downto 136);
 BrnchMemDB<=OUTbuffer_D(135);
 BranchE<=OUTbuffer_D(134 downto 133);
